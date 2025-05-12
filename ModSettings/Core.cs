@@ -18,7 +18,7 @@ namespace ModSettings
     {
         private static MelonLogger.Instance staticLogger;
 
-        internal const SettingsCategory TargetOriginalCategory = SettingsCategory.GENERAL;
+        internal const SettingsCategory TargetOriginalCategory = SettingsCategory.AUDIO;
         internal const string ModsButtonName = "ModsButton";
         internal const string ModCategoryContainerName = "MODS";
         internal const string ModCategoryLocalizationKey = "panel_settings_category_mods";
@@ -161,7 +161,7 @@ namespace ModSettings
             static void InitializeModUIFramework(UISettingsPanel panelInstance)
             {
                 var iPanel = panelInstance?.m_SettingsInnerPanel; var cats = iPanel?.m_CategoriesPlacement; if (iPanel == null || cats == null) { LogError("InitializeModUIFramework: InnerPanel/CatsPlacement Null."); return; }
-                GameObject templateCatGO = (iPanel.m_Categories?.TryGetValue(TargetOriginalCategory, out var gc) == true && gc != null) ? gc.gameObject : cats.Find("GENERAL")?.gameObject;
+                GameObject templateCatGO = (iPanel.m_Categories?.TryGetValue(SettingsCategory.GENERAL, out var gc) == true && gc != null) ? gc.gameObject : cats.Find("GENERAL")?.gameObject;
                 if (templateCatGO == null) { LogError("InitializeModUIFramework: Template Category GO Null."); return; }
                 GameObject templateEntryGO = FindDeepChild(FindDeepChild(templateCatGO.transform, "ScrollView"), "LOCALIZATION")?.gameObject;
                 if (templateEntryGO == null) { LogError("InitializeModUIFramework: Template Entry GO Null."); return; }
