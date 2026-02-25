@@ -38,6 +38,9 @@ namespace CustomPremiums
         // ArtId -> absolute path to custom texture
         public static readonly Dictionary<int, string> CustomTextures = new();
 
+        // ArtId of the donor card whose premium audio we borrow (Elven Wardancer)
+        public const int DonorArtId = 1222;
+
         // Caches
         public static readonly Dictionary<int, AssetBundle> LoadedBundles = new();
         public static readonly Dictionary<int, Texture2D> LoadedTextures = new();
@@ -123,6 +126,20 @@ namespace CustomPremiums
                 var sharedData = GwentApp.Instance?.SharedData;
                 if (sharedData?.SharedRuntimeTemplates == null) return;
 
+                // First pass: find the donor card's AudioId
+                int donorAudioId = 0;
+                foreach (var kvp in sharedData.SharedRuntimeTemplates)
+                {
+                    var t = kvp.Value;
+                    if (t?.ArtDefinition != null && t.ArtDefinition.ArtId == DonorArtId)
+                    {
+                        donorAudioId = t.Template.AudioId;
+                        Logger.Msg($"[Init] Donor AudioId: {donorAudioId} (from ArtId {DonorArtId})");
+                        break;
+                    }
+                }
+
+                // Second pass: register custom cards and set their AudioId to the donor's
                 foreach (var kvp in sharedData.SharedRuntimeTemplates)
                 {
                     var template = kvp.Value;
@@ -133,6 +150,13 @@ namespace CustomPremiums
                             TargetTemplateIds.Add(template.Template.Id);
                             TemplateIdToArtId[template.Template.Id] = template.ArtDefinition.ArtId;
                             Logger.Msg($"[Init] Mapped ArtId {template.ArtDefinition.ArtId} -> TemplateId {template.Template.Id}");
+
+                            if (donorAudioId > 0)
+                            {
+                                int oldAudioId = template.Template.AudioId;
+                                template.Template.AudioId = donorAudioId;
+                                Logger.Msg($"[Init] AudioId for ArtId {template.ArtDefinition.ArtId}: {oldAudioId} -> {donorAudioId} (donor)");
+                            }
                         }
                     }
                 }
