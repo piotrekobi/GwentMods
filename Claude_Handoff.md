@@ -48,46 +48,30 @@ Upon analyzing our compiled bundles using `UnityPy`, we discovered a massive pro
 Gwent uses proprietary shaders (e.g., `ShaderLibrary/Generic/GwentStandard`, `VFX/Common/AdditiveAlpha`). In the retail game, these compiled shaders live inside entirely separate dependency AssetBundles (`bundledassets/dependencies/shaderlibrary` and `bundledassets/dependencies/shaders`).
 Because our local Unity Editor did *not* have the compiled shader binaries, Unity treated them as "Missing/Error Shaders." During AssetBundle serialization, Unity optimizes by throwing away any material properties (like `_MainTex` or `_AlphaPremultiply`) that don't match properties explicitly declared in the assigned shader. Since the shader was missing, *all* properties were deemed invalid and were stripped.
 
-### Phase C: The Breakthrough Solution (Dummy Shaders + GUID Spoofing)
+### Phase C: The Breakthrough Solution
 To force Unity to preserve the material properties inside the `.mat` files, we engineered a complex workaround:
+1. **Dummy Shader Creation:** We wrote `.shader` files that replicate the exact property blocks of the real Gwent shaders.
+2. **GUID Spoofing:** We extracted the real GUIDs from the retail bundles and manually injected them into our dummy `.meta` files.
+3. **The Python Post-Processing Pipeline:** `patch_bundle_shaders.py` uses `UnityPy` to crack open our newly built Unity AssetBundle, reassign `m_Shader` PPtrs, and link them to the correct external CAB dependencies from the real game.
 
-1. **Dummy Shader Creation:**
-   We wrote `.shader` files in `Assets/DummyShaders/` that replicate the exact property blocks of the real Gwent shaders.
-   - For `GwentStandard`, we dumped the vanilla materials via Python and mapped out all 48 Floats, 12 Colors, and 5 Textures.
-   - We removed the `CGPROGRAM` blocks and replaced them with fixed-function commands (`Color (1,1,1,1) Pass { SetTexture [_MainTex] { combine texture } }`) to ensure they compile flawlessly across all Unity build targets without invoking a shader compiler error that might still strip properties.
-
-2. **GUID Spoofing (CRITICAL):**
-   Unity materials do *not* reference shaders by their string name (e.g., "GwentStandard"); they reference them by a hidden MD5 Unity GUID found in the `.shader.meta` file. 
-   If our Dummy Shader generated a new GUID, the retail game would fail to link the material to the real shader upon loading.
-   We extracted the real GUIDs from the retail bundles and manually injected them into our dummy `.meta` files:
-   - `GwentStandard`: `d20fdbed1dcf2bc4b96946044cb8443e`
-   - `VFX/Common/AdditiveAlpha`: `83d4e1dc1d5b5b84aa81ad1a67196f6f`
-   - `VFX/Common/AlphaBlended`: `dba6637c54a17714ea0122d5a54fe4d8`
-   - `FakePostEffect/Additive_Mask`: `fc07c209a959c994aa37bca45137595e`
-
-### Phase D: The Python Post-Processing Pipeline
-Even with properties preserved and GUIDs spoofed, our Unity editor builds referenced the wrong external CAB (Cabinet) files for where those shaders lived.
-We wrote two highly advanced Python scripts to handle post-build patching and verification:
-
-1. **`patch_bundle_shaders.py`**
-   - Uses `UnityPy` to crack open our newly built Unity AssetBundle (`buildplayer-1832.sharedassets`).
-   - It reads the `m_Externals` table. By default, Unity only linked the `shaderlibrary` CAB.
-   - We explicitly inject the retail game's VFX `shaders` CAB (`CAB-c0bb786e78837791c9d84c9a06de6e2b`) into the external array as `fid = 5`.
-   - It loops through every single Material in the bundle:
-     - If it detects a `GwentStandard` material, it forces its `m_Shader` PPtr to point to `fid = 4` (the shaderlibrary).
-     - If it detects a VFX material (AlphaBlended, AdditiveAlpha), it repoints the `m_Shader` to `fid = 5` (the newly injected VFX shaders CAB).
-   - It saves and commits the binary bundle.
-
-2. **`compare_bundles.py`**
-   - A verification script that loads the unmodded vanilla bundle and our custom newly-patched bundle.
-   - It prints a line-by-line comparison of every Float, Color, and Texture inside the material properties. 
-   - **Status:** Our pipeline currently achieves exactly 100% parity with the retail game. The system is flawless.
+Our pipeline currently achieves exactly 100% parity with the retail game. The C# payload is successfully injecting these flawlessly patched bundles.
 
 ---
 
-## 4. OUR CURRENT TASK: BUILDING THE ELVEN DEADEYE (1832)
+## 4. OUR CLEAR PLAN & NEXT STEPS FOR CLAUDE
 
-Having proven the pipeline with the cloned Elven Wardancer, we are now creating a **custom premium from scratch**.
-We confirmed that Elven Deadeye (1832) has NO premium assets from CDPR.
+You will execute the following steps precisely in this sequence:
 
-Based on all your knowledge - how can we now add the premium card to the game?
+### STEP 1: Workflow Automation (The Single Build Script)
+Currently, iterating on a custom premium is tedious because we have to manually run a sequence of separate steps (Unity project build, Python bundle patching, C# project compilation, moving files, testing in game).
+**Your first objective is to build a single powerful script** (e.g., in Python or PowerShell) that orchestrates this entire pipeline into one single command. We want to be able to execute one script and have it automatically build the AssetBundle, run the patcher, compile the C# Mod, and copy files to the game directory. 
+
+### STEP 2: Cloning the Dryad Ranger
+Before we construct the Elven Deadeye, we will transition our working copied premium to the **Dryad Ranger**. 
+The Dryad Ranger is a card that is visually very similar in composition to the Elven Deadeye. By duplicating and observing an already-working premium copy (the Dryad Ranger), we will study its scene structure in Unity as our functional baseline.
+Your goal here is to replace our current "placeholder" cloned scene with a flawless functioning cloned scene of the Dryad Ranger using our new automated workflow.
+
+### STEP 3: Recreating the Elven Deadeye (1832)
+Once the cloned Dryad Ranger is functioning flawlessly in-game as an injected bundle, we will analyze exactly how the Dryad Ranger card scene is created. 
+Using this exact structural knowledge (mesh layout, material setup, quads, and VFX), you will create the brand new **Elven Deadeye** premium. 
+**CRITICAL RULE FOR STEP 3:** Keep the Elven Deadeye structure *as similar as possible* to the existing Dryad Ranger structure. Do NOT try novel approaches or modern Unity tricks. You must faithfully reconstruct it exactly as CDPR would do it.
