@@ -52,6 +52,113 @@ public class BuildPremiumBundle
         BatchBuildSceneBundle(scenePath, "1832", outputDir);
     }
 
+    /// <summary>
+    /// Watcher-safe build called by AutoBuildOnLoad. Never calls EditorApplication.Exit().
+    /// If 1832.unity doesn't exist, falls back to copying the Wardancer scene as a donor.
+    /// Throws System.Exception on failure so the watcher can report it.
+    /// </summary>
+    public static void WatcherBuild1832()
+    {
+        string outputDir = @"E:\GOG Galaxy\Games\Gwent\Mods\CustomPremiums\Bundles";
+        string scenePath = "Assets/BundledAssets/CardAssets/Scenes/1832.unity";
+        string donorPath = "Assets/BundledAssets/CardAssets/Scenes/12220101.unity";
+
+        if (!Directory.Exists(outputDir))
+            Directory.CreateDirectory(outputDir);
+
+        bool usedDonor = false;
+        if (!File.Exists(Path.Combine(Application.dataPath, "..", scenePath)))
+        {
+            // No custom 1832 scene yet — copy Wardancer as donor
+            Debug.Log("[WatcherBuild] 1832.unity not found, copying Wardancer donor scene...");
+            if (!AssetDatabase.CopyAsset(donorPath, scenePath))
+                throw new System.Exception($"Failed to copy donor scene {donorPath} -> {scenePath}");
+            usedDonor = true;
+        }
+
+        try
+        {
+            WatcherBuildSceneBundle(scenePath, "1832", outputDir);
+        }
+        finally
+        {
+            if (usedDonor)
+            {
+                AssetDatabase.DeleteAsset(scenePath);
+                Debug.Log("[WatcherBuild] Cleaned up temporary donor scene.");
+            }
+        }
+    }
+
+    private static void WatcherBuildSceneBundle(string scenePath, string bundleName, string outputDir)
+    {
+        if (!File.Exists(Path.Combine(Application.dataPath, "..", scenePath)))
+            throw new System.Exception($"Scene not found: {scenePath}");
+
+        string outputPath = Path.Combine(outputDir, bundleName);
+        Debug.Log($"[WatcherBuild] Building: {scenePath} -> {outputPath}");
+
+        var build = new AssetBundleBuild();
+        build.assetBundleName = bundleName;
+        build.assetNames = new string[] { scenePath };
+
+        var depBundles = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
+        string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
+        foreach (string p in allAssetPaths)
+        {
+            var importer = AssetImporter.GetAtPath(p);
+            if (importer != null && !string.IsNullOrEmpty(importer.assetBundleName)
+                && importer.assetBundleName.StartsWith("bundledassets/dependencies/"))
+            {
+                if (!depBundles.ContainsKey(importer.assetBundleName))
+                    depBundles[importer.assetBundleName] = new System.Collections.Generic.List<string>();
+                depBundles[importer.assetBundleName].Add(p);
+            }
+        }
+
+        var allBuilds = new System.Collections.Generic.List<AssetBundleBuild>();
+        allBuilds.Add(build);
+
+        foreach (var kvp in depBundles)
+        {
+            var depBuild = new AssetBundleBuild();
+            depBuild.assetBundleName = kvp.Key;
+            depBuild.assetNames = kvp.Value.ToArray();
+            allBuilds.Add(depBuild);
+            Debug.Log($"[WatcherBuild]   Dependency: {kvp.Key} ({kvp.Value.Count} assets)");
+        }
+
+        var manifest = BuildPipeline.BuildAssetBundles(
+            outputDir,
+            allBuilds.ToArray(),
+            BuildAssetBundleOptions.UncompressedAssetBundle,
+            BuildTarget.StandaloneWindows64);
+
+        if (manifest != null)
+        {
+            string manifestFile = outputPath + ".manifest";
+            string dirBundle = Path.Combine(outputDir, Path.GetFileName(outputDir));
+            string dirManifest = dirBundle + ".manifest";
+
+            if (File.Exists(manifestFile)) File.Delete(manifestFile);
+            if (File.Exists(dirBundle)) File.Delete(dirBundle);
+            if (File.Exists(dirManifest)) File.Delete(dirManifest);
+
+            foreach (var kvp in depBundles)
+            {
+                string depManifest = Path.Combine(outputDir, kvp.Key + ".manifest");
+                if (File.Exists(depManifest)) File.Delete(depManifest);
+            }
+
+            long size = new FileInfo(outputPath).Length;
+            Debug.Log($"[WatcherBuild] SUCCESS! {size} bytes -> {outputPath}");
+        }
+        else
+        {
+            throw new System.Exception("BuildPipeline.BuildAssetBundles returned null!");
+        }
+    }
+
     private static void BatchBuildSceneBundle(string scenePath, string bundleName, string outputDir)
     {
         if (!File.Exists(Path.Combine(Application.dataPath, "..", scenePath)))
