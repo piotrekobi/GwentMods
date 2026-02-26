@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using System.IO;
 
 public class BuildPremiumBundle
@@ -91,6 +92,53 @@ public class BuildPremiumBundle
         {
             AssetDatabase.DeleteAsset(scenePath);
             Debug.Log("[WatcherBuild] Cleaned up temporary donor scene.");
+        }
+    }
+
+    /// <summary>
+    /// Build from a WIP prefab — creates a temporary scene from the prefab,
+    /// builds the AssetBundle, and cleans up.
+    /// Used for cards that have a prefab but no finalized scene file.
+    /// </summary>
+    public static void WatcherBuildFromPrefab(string targetArtId, string prefabPath)
+    {
+        string outputDir = @"E:\GOG Galaxy\Games\Gwent\Mods\CustomPremiums\Bundles";
+        string scenePath = $"Assets/BundledAssets/CardAssets/Scenes/{targetArtId}.unity";
+
+        if (!Directory.Exists(outputDir))
+            Directory.CreateDirectory(outputDir);
+
+        // Load the prefab
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (prefab == null)
+            throw new System.Exception($"Prefab not found: {prefabPath}");
+
+        Debug.Log($"[WatcherBuild] Creating scene from prefab: {prefabPath}");
+
+        // Create a new empty scene
+        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+        // Instantiate the prefab (preserves prefab links so Unity includes all dependencies)
+        var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+        if (instance == null)
+            throw new System.Exception($"Failed to instantiate prefab: {prefabPath}");
+
+        Debug.Log($"[WatcherBuild] Instantiated prefab as '{instance.name}' in scene");
+
+        // Save the scene
+        if (!EditorSceneManager.SaveScene(scene, scenePath))
+            throw new System.Exception($"Failed to save scene: {scenePath}");
+
+        Debug.Log($"[WatcherBuild] Saved scene: {scenePath}");
+
+        try
+        {
+            WatcherBuildSceneBundle(scenePath, targetArtId, outputDir);
+        }
+        finally
+        {
+            AssetDatabase.DeleteAsset(scenePath);
+            Debug.Log("[WatcherBuild] Cleaned up temporary scene from prefab.");
         }
     }
 

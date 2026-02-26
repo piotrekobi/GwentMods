@@ -1,6 +1,6 @@
 # GWENT MODDING PROJECT: COMPLETE CONTEXT AND HANDOFF DOCUMENT
 **Target Agent:** Claude Code
-**Current State:** Step 2 Complete — Next: Build Mimikr Scene, Then Elven Deadeye Premium
+**Current State:** Step 3a Complete — Next: Test Mimikr Build, Then Elven Deadeye Premium
 
 Hello Claude! You are being handed a modding project for the game **Gwent: The Witcher Card Game**. We have built a fully generic, config-driven pipeline to inject custom Premium (animated) cards into the retail game.
 
@@ -16,7 +16,8 @@ The long-term target is the **Elven Deadeye (ArtId: 1832)** — a token card tha
 The plan has 3 steps:
 1. **DONE** — Build automation pipeline (`build.py`) — fully generic, config-driven
 2. **DONE** — Test pipeline with multiple donor cards (Dryad Ranger, Milva, Siren Human Form, Falbeson)
-3. **NOW** — Build a brand-new premium from scratch (starting with Mimikr, then Elven Deadeye)
+3. **DONE (3a)** — Extend pipeline to build scenes from WIP prefabs (Mimikr)
+4. **NOW** — Test Mimikr build end-to-end, then build Elven Deadeye from scratch
 
 ---
 
@@ -64,11 +65,21 @@ A single Python script that orchestrates 5 steps:
 
 **Config-driven:** Just change the `CARDS` dict at the top of `build.py`:
 ```python
+# Clone a donor card's scene:
 CARDS = {
     "1832": {"donor": "1349"},  # Elven Deadeye ← Dryad Ranger premium
 }
+
+# Build from a WIP prefab (no finalized scene needed):
+CARDS = {
+    "1832": {
+        "prefab": "Assets/PremiumCards/WIP/_Prefabs_WIP/[]Mimikr.prefab",
+        "texture": "Assets/PremiumCards/WIP/_Textures_WIP/_Premium/_Uber/[]Mimikr_Atlas.png",
+        "donor": "1349",  # optional: for premium SFX audio
+    },
+}
 ```
-That's it — everything else (scene copying, texture lookup, audio mapping, shader patching) is automatic.
+Everything else (scene generation/copying, texture lookup, audio mapping, shader patching) is automatic.
 
 The file-watcher (`AutoBuildOnLoad.cs`) uses a `System.Threading.Timer` for background
 polling so it works even when Unity is unfocused. Build timeout is 300 seconds.
@@ -132,7 +143,7 @@ E:\GOG Galaxy\Games\Gwent\
 
 ---
 
-## 4. CURRENT TASK: BUILD MIMIKR PREMIUM SCENE (Step 3a)
+## 4. CURRENT TASK: TEST MIMIKR BUILD + ELVEN DEADEYE (Step 3b)
 
 ### 4.1 Why Mimikr First?
 Mimikr is an unreleased WIP card in the CDPR source code. It has all the raw assets needed for a
@@ -182,12 +193,13 @@ CDPR's premium cards are 2.5D parallax dioramas:
 Without it, Hook 5 can't find where to assign the custom texture. The handler has
 `PremiumTextureAssigments` — an array of material slots that get the atlas texture applied.
 
-### 4.5 Approach
-1. Open the Dryad Ranger scene (`13490101.unity`) in Unity to study its hierarchy
-2. Examine the Mimikr prefab to see if it already has the right structure
-3. Write a Unity Editor script to generate a scene from the Mimikr assets
-4. Build with `python build.py` (may need a temporary CARDS config entry)
-5. If it works, apply the same approach to build the Elven Deadeye premium
+### 4.5 Approach (Step 3a DONE — prefab pipeline built)
+The pipeline now supports building directly from WIP prefabs. To test:
+1. Open Unity Editor with the Gwent project
+2. Run `python build.py` (CARDS config already points to Mimikr prefab)
+3. Launch game and verify Elven Deadeye card renders with Mimikr's animation
+4. Check MelonLoader log for shader status and texture application
+5. Apply same approach to build the Elven Deadeye premium from scratch
 
 ### 4.6 After Mimikr: Elven Deadeye Premium (Step 3b)
 Once we know how to build a scene from raw assets, we create the Elven Deadeye premium:
@@ -299,6 +311,16 @@ EPremiumMode: Disabled=0, Enabled=1, ...
 - `patch_bundle_shaders.py`: Auto-discovers all shader→CAB mappings from game bundles, fallback to GwentStandard
 - `Core.cs`: Reads `donor_config.json` for per-card donor audio, runtime shader fallback chain, Hook 6 voiceline redirect
 - Deleted `GenerateElvenDeadeye.cs` (superseded by generic pipeline)
+
+### Step 3a: Build from WIP Prefabs (DONE)
+- Extended pipeline to build scenes from WIP prefabs (cards without finalized scene files)
+- `BuildPremiumBundle.cs`: Added `WatcherBuildFromPrefab(targetArtId, prefabPath)` — creates new scene,
+  instantiates prefab via `PrefabUtility.InstantiatePrefab()`, builds bundle, cleans up
+- `AutoBuildOnLoad.cs`: Extended trigger format to support `targetArtId:prefab:path/to.prefab`
+- `build.py`: Added `prefab` and `texture` config keys; `donor` now optional (for audio only)
+- Configured for Mimikr WIP card: prefab has complete hierarchy (PremiumCardsMeshMaterialHandler,
+  Animator, SkinnedMeshRenderer with 4 materials, FBX mesh)
+- Materials: `mat_1_1` uses GwentStandard, `mat_1_2-1_4` use Unity Standard (patched to GwentStandard)
 
 ### Donor Testing (DONE)
 - Dryad Ranger (1349): Full audio + rendering

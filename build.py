@@ -8,7 +8,14 @@ Orchestrates the full build in one command:
   4. Build the C# MelonLoader mod (dotnet)
   5. Deploy textures + donor config to the game directory
 
-Config-driven: just change the CARDS dict below to add/change donors.
+Config-driven: just change the CARDS dict below.
+
+Supported config modes:
+  {"donor": "1349"}                     - clone a donor card's scene
+  {"prefab": "Assets/path/to.prefab"}   - build scene from a WIP prefab
+  Optional keys:
+    "texture": "Assets/path/to.png"     - custom texture (relative to Unity project)
+    "donor": "1349"                     - donor card for premium SFX audio
 
 Requires: Unity Editor open with the Gwent project loaded.
 
@@ -27,10 +34,14 @@ import time
 import filecmp
 
 # =============================================================================
-# CONFIGURATION — change donor cards here. That's it.
+# CONFIGURATION — change cards here. That's it.
 # =============================================================================
 CARDS = {
-    "1832": {"donor": "1542"},  # Elven Deadeye ← Falbeson (unreleased, NorthernRealms)
+    "1832": {
+        "prefab": "Assets/PremiumCards/WIP/_Prefabs_WIP/[]Mimikr.prefab",
+        "texture": "Assets/PremiumCards/WIP/_Textures_WIP/_Premium/_Uber/[]Mimikr_Atlas.png",
+        "donor": "1349",  # Dryad Ranger audio for premium SFX
+    },
 }
 
 GWENTMODS_DIR = r"E:\Projekty\GwentMods"
@@ -141,8 +152,18 @@ def step1_sync_scripts():
 # ─────────────────────────────────────────────────────────────
 # STEP 2: Build AssetBundle via Unity (running editor)
 # ─────────────────────────────────────────────────────────────
-def step2_build_bundle(art_id, donor_id):
-    step_header(2, f"Build AssetBundle (ArtId {art_id} <- Donor {donor_id})")
+def step2_build_bundle(art_id, card_cfg):
+    prefab_path = card_cfg.get("prefab")
+    donor_id = card_cfg.get("donor")
+
+    if prefab_path:
+        step_header(2, f"Build AssetBundle (ArtId {art_id} <- Prefab)")
+        trigger_content = f"{art_id}:prefab:{prefab_path}"
+    elif donor_id:
+        step_header(2, f"Build AssetBundle (ArtId {art_id} <- Donor {donor_id})")
+        trigger_content = f"{art_id}:{donor_id}"
+    else:
+        fail(f"Card {art_id}: needs 'prefab' or 'donor' key in config")
 
     bundle_path = os.path.join(BUNDLE_OUTPUT_DIR, art_id)
     os.makedirs(BUNDLE_OUTPUT_DIR, exist_ok=True)
@@ -154,10 +175,9 @@ def step2_build_bundle(art_id, donor_id):
     if os.path.isfile(RESULT_FILE):
         os.remove(RESULT_FILE)
 
-    # Write trigger with format "targetArtId:donorArtId"
     with open(TRIGGER_FILE, "w") as f:
-        f.write(f"{art_id}:{donor_id}")
-    print(f"  Trigger sent to Unity Editor ({art_id}:{donor_id}). Waiting for build...")
+        f.write(trigger_content)
+    print(f"  Trigger sent to Unity Editor ({trigger_content}). Waiting for build...")
 
     nudge_unity()
 
@@ -245,13 +265,23 @@ def step5_deploy(cards_to_build):
     os.makedirs(TEXTURE_DST_DIR, exist_ok=True)
 
     for art_id, card_cfg in cards_to_build.items():
-        donor_id = card_cfg["donor"]
-        # Premium texture: {donorArtId}0100.png from the Unity source project
-        texture_src = os.path.join(PREMIUM_TEXTURE_DIR, f"{donor_id}0100.png")
+        texture_src = None
 
-        if not os.path.isfile(texture_src):
-            print(f"  WARNING: Premium texture not found: {texture_src}")
-            # Fall back to manual texture in UnityAssets/Textures/
+        # 1. Explicit texture path (relative to Unity project)
+        if "texture" in card_cfg:
+            texture_src = os.path.join(UNITY_PROJECT, card_cfg["texture"])
+            if not os.path.isfile(texture_src):
+                fail(f"Custom texture not found: {texture_src}")
+
+        # 2. Auto-lookup from donor's premium texture
+        if texture_src is None and "donor" in card_cfg:
+            donor_id = card_cfg["donor"]
+            texture_src = os.path.join(PREMIUM_TEXTURE_DIR, f"{donor_id}0100.png")
+
+        # 3. Fallback to manual texture in UnityAssets/Textures/
+        if texture_src is None or not os.path.isfile(texture_src):
+            if texture_src:
+                print(f"  WARNING: Texture not found: {texture_src}")
             fallback = os.path.join(GWENTMODS_DIR, "UnityAssets", "Textures", f"{art_id}.png")
             if os.path.isfile(fallback):
                 texture_src = fallback
@@ -265,7 +295,10 @@ def step5_deploy(cards_to_build):
         print(f"  Deployed: {art_id}.png ({size:,} bytes) from {os.path.basename(texture_src)}")
 
     # Write donor_config.json for the C# mod (maps artId → donor artId for audio)
-    donor_config = {int(k): int(v["donor"]) for k, v in cards_to_build.items()}
+    donor_config = {}
+    for k, v in cards_to_build.items():
+        if "donor" in v:
+            donor_config[int(k)] = int(v["donor"])
     with open(DONOR_CONFIG_PATH, "w") as f:
         json.dump(donor_config, f)
     print(f"  Wrote donor_config.json: {donor_config}")
@@ -286,8 +319,9 @@ def main():
 
     print("=" * 60)
     print("  CUSTOM PREMIUMS — UNIFIED BUILD PIPELINE")
-    card_list = ', '.join(f'{k} <- donor {v["donor"]}' for k, v in cards_to_build.items())
-    print(f"  Cards: {card_list}")
+    for k, v in cards_to_build.items():
+        source = f"prefab {v['prefab']}" if "prefab" in v else f"donor {v.get('donor', '?')}"
+        print(f"  Card {k} <- {source}")
     print("=" * 60)
 
     t0 = time.time()
@@ -295,7 +329,7 @@ def main():
     step1_sync_scripts()
 
     for art_id, card_cfg in cards_to_build.items():
-        step2_build_bundle(art_id, card_cfg["donor"])
+        step2_build_bundle(art_id, card_cfg)
         step3_patch_shaders(art_id)
 
     step4_build_mod()

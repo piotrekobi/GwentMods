@@ -555,10 +555,19 @@ namespace CustomPremiums
                     {
                         foreach (var assignment in matHandler.PremiumTextureAssigments)
                         {
-                            if (assignment?.Material != null)
+                            if (assignment?.Material == null) continue;
+                            try
                             {
                                 assignment.AssignTexture(customTex);
-                                Logger.Msg("[HOOK 5] Custom texture applied via Handlers!");
+                                Logger.Msg($"[HOOK 5] Texture applied via Handler on '{assignment.Material.name}'");
+                            }
+                            catch
+                            {
+                                // AssignTexture calls GetMaterialCopy which needs renderer context
+                                // that isn't available on freshly-loaded prefab instances.
+                                // Fall back to setting _MainTex directly on the material.
+                                assignment.Material.mainTexture = customTex;
+                                Logger.Msg($"[HOOK 5] Texture applied directly on '{assignment.Material.name}'");
                             }
                         }
                     }

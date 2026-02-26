@@ -100,26 +100,37 @@ public static class AutoBuildOnLoad
         string content = buildArtId ?? "1832:1349";
         try
         {
-            // Parse trigger format: "targetArtId:donorArtId"
-            string targetArtId, donorArtId;
-            if (content.Contains(":"))
+            // Parse trigger format:
+            //   "targetArtId:prefab:Assets/path/to.prefab"    -> generate scene from prefab
+            //   "targetArtId:donorArtId"                      -> clone donor scene
+            //   "targetArtId"                                 -> legacy (self-donor)
+            if (content.Contains(":prefab:"))
+            {
+                int idx = content.IndexOf(":prefab:");
+                string targetArtId = content.Substring(0, idx).Trim();
+                string prefabPath = content.Substring(idx + 8).Trim();
+
+                Debug.Log($"[BuildWatcher] Building from prefab: target={targetArtId}, prefab={prefabPath}...");
+                BuildPremiumBundle.WatcherBuildFromPrefab(targetArtId, prefabPath);
+            }
+            else if (content.Contains(":"))
             {
                 var parts = content.Split(':');
-                targetArtId = parts[0].Trim();
-                donorArtId = parts[1].Trim();
+                string targetArtId = parts[0].Trim();
+                string donorArtId = parts[1].Trim();
+
+                Debug.Log($"[BuildWatcher] Building bundle: target={targetArtId}, donor={donorArtId}...");
+                BuildPremiumBundle.WatcherBuildGeneric(targetArtId, donorArtId);
             }
             else
             {
-                // Legacy format: just artId (no donor specified)
-                targetArtId = content.Trim();
-                donorArtId = targetArtId;
+                string targetArtId = content.Trim();
+                Debug.Log($"[BuildWatcher] Building bundle: target={targetArtId}, donor={targetArtId}...");
+                BuildPremiumBundle.WatcherBuildGeneric(targetArtId, targetArtId);
             }
 
-            Debug.Log($"[BuildWatcher] Building bundle: target={targetArtId}, donor={donorArtId}...");
-            BuildPremiumBundle.WatcherBuildGeneric(targetArtId, donorArtId);
-
             File.WriteAllText(ResultFile, "OK");
-            Debug.Log($"[BuildWatcher] Build complete for {targetArtId}! Result: OK");
+            Debug.Log($"[BuildWatcher] Build complete! Result: OK");
         }
         catch (System.Exception e)
         {
