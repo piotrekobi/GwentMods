@@ -1,8 +1,8 @@
 # GWENT MODDING PROJECT: COMPLETE CONTEXT AND HANDOFF DOCUMENT
 **Target Agent:** Claude Code
-**Current State:** Step 2 Complete, Step 3 Ready — Build Elven Deadeye Premium
+**Current State:** Step 2 Complete — Next: Build Mimikr Scene, Then Elven Deadeye Premium
 
-Hello Claude! You are being handed a modding project for the game **Gwent: The Witcher Card Game**. We have built a pipeline to inject custom Premium (animated) cards into the retail game.
+Hello Claude! You are being handed a modding project for the game **Gwent: The Witcher Card Game**. We have built a fully generic, config-driven pipeline to inject custom Premium (animated) cards into the retail game.
 
 This document is your source of truth. Read it entirely before executing any actions.
 
@@ -14,9 +14,9 @@ We are creating **Custom Premium Cards** from scratch. Our current focus is "Tok
 The long-term target is the **Elven Deadeye (ArtId: 1832)** — a token card that was never made premium by CDPR.
 
 The plan has 3 steps:
-1. **DONE** — Build automation pipeline (`build.py`)
-2. **DONE** — Clone the Dryad Ranger premium as a working baseline
-3. **NOW** — Build a brand-new Elven Deadeye premium from scratch
+1. **DONE** — Build automation pipeline (`build.py`) — fully generic, config-driven
+2. **DONE** — Test pipeline with multiple donor cards (Dryad Ranger, Milva, Siren Human Form, Falbeson)
+3. **NOW** — Build a brand-new premium from scratch (starting with Mimikr, then Elven Deadeye)
 
 ---
 
@@ -32,17 +32,17 @@ The plan has 3 steps:
 ### Key Directories
 ```
 E:\Projekty\GwentMods\
-├── build.py                     # Unified build pipeline (Step 1 output)
-├── patch_bundle_shaders.py      # Post-build shader patcher (UnityPy)
+├── build.py                     # Unified build pipeline (config-driven)
+├── patch_bundle_shaders.py      # Post-build shader patcher (auto-discovers game shaders)
+├── compare_bundles.py           # Debug utility (compares game vs custom bundles)
 ├── CustomPremiums\
-│   ├── Core.cs                  # C# MelonLoader mod (Harmony hooks)
+│   ├── Core.cs                  # C# MelonLoader mod (6 Harmony hooks)
 │   └── CustomPremiums.csproj    # .NET 6.0, PostBuild copies DLL to game
 ├── UnityScripts\
 │   ├── AutoBuildOnLoad.cs       # [InitializeOnLoad] file-watcher for Unity Editor
-│   ├── BuildPremiumBundle.cs    # AssetBundle build methods
-│   └── GenerateElvenDeadeye.cs  # Scene generator (used later in Step 3)
+│   └── BuildPremiumBundle.cs    # AssetBundle build methods (generic + legacy)
 ├── UnityAssets\Textures\
-│   └── 1832.png                 # Source texture for Elven Deadeye
+│   └── 1832.png                 # Fallback texture (not used when donor auto-copies)
 ├── CustomSoundsGuide.md         # Detailed guide for custom Wwise audio (future)
 └── Claude_Handoff.md            # This file
 ```
@@ -54,49 +54,68 @@ E:\Projekty\GwentMods\
 ### 3.1 The Build Pipeline (`build.py`)
 A single Python script that orchestrates 5 steps:
 1. **Sync Unity scripts** — copies `UnityScripts/*.cs` → Unity project's `Assets/Editor/`
-2. **Build AssetBundle** — creates `build_trigger.txt`, Unity's file-watcher detects it,
-   builds the bundle, writes `build_result.txt` with OK/FAIL
+2. **Build AssetBundle** — writes trigger file (`targetArtId:donorArtId`), Unity's file-watcher detects it,
+   copies the donor scene to `{targetArtId}.unity`, builds the bundle, cleans up, writes result
 3. **Patch shaders** — runs `patch_bundle_shaders.py` to fix material shader references
 4. **Build C# mod** — `dotnet build CustomPremiums.csproj`, auto-deploys DLL
-5. **Deploy texture** — copies PNG from `UnityAssets/Textures/` to game's mod folder
+5. **Deploy texture + config** — auto-copies premium texture from Unity source project, writes `donor_config.json`
 
 **How to use:** Open Unity Editor with the Gwent project loaded, then run `python build.py`.
+
+**Config-driven:** Just change the `CARDS` dict at the top of `build.py`:
+```python
+CARDS = {
+    "1832": {"donor": "1349"},  # Elven Deadeye ← Dryad Ranger premium
+}
+```
+That's it — everything else (scene copying, texture lookup, audio mapping, shader patching) is automatic.
 
 The file-watcher (`AutoBuildOnLoad.cs`) uses a `System.Threading.Timer` for background
 polling so it works even when Unity is unfocused. Build timeout is 300 seconds.
 
-### 3.2 The Shader Patching Problem (Solved)
-Gwent uses proprietary shaders (`ShaderLibrary/Generic/GwentStandard`, `VFX/Common/AdditiveAlpha`, etc.)
-stored in separate dependency AssetBundles. Our Unity Editor doesn't have the compiled shader binaries,
-so Unity treats them as missing shaders and **strips all material properties** during AssetBundle build.
+### 3.2 The Shader Patching (`patch_bundle_shaders.py`)
+**Problem:** Gwent uses proprietary shaders stored in separate dependency AssetBundles. Unity strips
+shader references during build because it only has dummy `.shader` files (with GUID-spoofed `.meta` files).
 
-**Solution:**
-1. Dummy `.shader` files replicate the exact property blocks of the real Gwent shaders
-2. GUID spoofing in `.meta` files matches the real shader GUIDs
-3. `patch_bundle_shaders.py` uses UnityPy to fix the `m_Shader` PPtrs post-build:
-   - GwentStandard → `CAB-e59affbfa21235772054ea15448f1070` (shaderlibrary)
-   - VFX shaders → `CAB-c0bb786e78837791c9d84c9a06de6e2b` (shaders)
+**Solution (fully automatic):**
+1. At patch time, scans the game's actual `shaderlibrary` and `shaders` bundles
+2. Builds a `path_id → CAB_name` lookup table (164 shaders discovered)
+3. For each material in the custom bundle:
+   - Known shader pid → correct CAB reference
+   - Unknown shader pid (only in Unity project, not in game) → fallback to GwentStandard
+   - Null shader (fid=0, pid=0) → GwentStandard
+   - Embedded/builtin shaders → left as-is
+
+No hardcoded pids or CAB names anywhere — works for any donor card automatically.
 
 ### 3.3 The C# Mod (`CustomPremiums/Core.cs`)
-A MelonLoader mod with Harmony patches:
-- **Hook 0** (`HandleDefinitionsLoaded`): Maps ArtIds to TemplateIds at startup. Also sets
-  each custom card's `AudioId` to the donor card's AudioId for premium sound support.
-- **Hook 1** (`Card.SetDefinition`): Forces `IsPremium = true`
-- **Hook 2** (`CardDefinition.IsPremiumDisabled`): Forces return `false`
-- **Hook 3** (`CardViewAssetComponent.ShouldLoadPremium`): Forces return `true`
-- **Hook 4** (`CardAppearanceRequest.HandleTextureRequestsFinished`): Loads our custom
-  scene bundle instead of the game's normal pipeline
-- **Hook 5** (`OnAppearanceObjectLoaded`): Swaps textures with our custom art. Also fixes
-  VFX materials whose shaders resolved to `Hidden/InternalErrorShader` at runtime.
+A MelonLoader mod with 6 Harmony hooks:
 
-**How the mod finds cards:** It scans `Mods/CustomPremiums/Bundles/` for extensionless
-files (bundle names = ArtId) and `Mods/CustomPremiums/Textures/` for `{ArtId}.png` files.
-At game startup, it cross-references these against `SharedRuntimeTemplates` to find TemplateIds.
+| Hook | Target | Purpose |
+|------|--------|---------|
+| **Hook 0** | `GwentApp.HandleDefinitionsLoaded` | Maps ArtIds→TemplateIds. Swaps AudioId to donor's for premium SFX. Has dedup guard (fires twice). |
+| **Hook 1** | `Card.SetDefinition` | Forces `IsPremium = true` |
+| **Hook 2** | `CardDefinition.IsPremiumDisabled` | Forces return `false` |
+| **Hook 3** | `CardViewAssetComponent.ShouldLoadPremium` | Forces return `true` |
+| **Hook 4** | `CardAppearanceRequest.HandleTextureRequestsFinished` | Loads our custom scene bundle, bypasses normal pipeline |
+| **Hook 5** | `CardAppearanceRequest.OnAppearanceObjectLoaded` | Swaps texture with custom art. Runtime shader fallback for InternalErrorShader. |
+| **Hook 6** | `VoiceDuplicateFilter.GenerateVoiceover(int, ECardAudioTriggerType)` | Redirects voicelines back to original card (since AudioId was swapped to donor's for SFX) |
 
-**Audio:** Premium ambient sound is borrowed from the Elven Wardancer (`DonorArtId = 1222`).
-The mod sets each custom card's `CardTemplate.AudioId` to the Wardancer's AudioId in Hook 0.
-This makes the entire Wwise pipeline work automatically (soundbank loading + event playback).
-See `CustomSoundsGuide.md` for details on how to bundle custom sounds in the future.
+**How the mod finds cards:** Scans `Mods/CustomPremiums/Bundles/` for extensionless files (bundle name = ArtId)
+and `Mods/CustomPremiums/Textures/` for `{ArtId}.png`. Cross-references against `SharedRuntimeTemplates` at startup.
+
+**Audio dual-path:** Premium ambient SFX comes from the donor card (via AudioId swap in Hook 0).
+Voicelines are redirected back to the original card (via Hook 6 on the `int` overload of `GenerateVoiceover`,
+since the `Card` overload is a one-liner inlined by Il2Cpp AOT compiler).
+
+**Runtime shader fallback (Hook 5):** If any material still has `Hidden/InternalErrorShader` after the
+build-time patcher, tries: `ShaderLibrary/Generic/GwentStandard` → `GwentStandard` → `VFX/Common/AlphaBlended`.
+
+**Config file:** Reads `donor_config.json` from the mod directory (written by `build.py`):
+```json
+{"1832": 1349}
+```
+Maps target ArtId → donor ArtId for audio.
 
 ### 3.4 Game File Deployment Layout
 ```
@@ -106,131 +125,135 @@ E:\GOG Galaxy\Games\Gwent\
 │   └── CustomPremiums\
 │       ├── Bundles\
 │       │   └── {ArtId}          # AssetBundle (extensionless)
-│       └── Textures\
-│           └── {ArtId}.png      # Card texture
+│       ├── Textures\
+│       │   └── {ArtId}.png      # Card texture
+│       └── donor_config.json    # ArtId → donor ArtId mapping
 ```
 
 ---
 
-## 4. CURRENT TASK: STEP 2 — CLONE THE DRYAD RANGER PREMIUM
+## 4. CURRENT TASK: BUILD MIMIKR PREMIUM SCENE (Step 3a)
 
-### 4.1 Why the Dryad Ranger?
-The Dryad Ranger (ArtId **1349**) is a Scoia'tael card depicting a character holding a bow —
-visually very similar to the Elven Deadeye. By cloning its premium and getting it working
-in our pipeline, we'll study its scene structure as a functional baseline for Step 3.
+### 4.1 Why Mimikr First?
+Mimikr is an unreleased WIP card in the CDPR source code. It has all the raw assets needed for a
+premium card (FBX, materials, animation controller, atlas texture) but **no finalized scene file**.
+Building a scene for it teaches us the scene structure needed to create the Elven Deadeye premium from scratch.
 
-### 4.2 Dryad Ranger Asset IDs
-| ID | Purpose |
-|---|---|
-| `1349` | Base ArtId |
-| `13490000` | Standard texture |
-| `13490100` | Premium texture |
-| `13490101` | Premium scene (the animated scene bundle) |
-| `13490300` | Premium card FBX model / materials |
+### 4.2 What Mimikr Has (WIP Assets)
+All at `D:\Gwent_Source_Code\Gwent\Gwent\GwentUnity\Gwent\Assets\PremiumCards\WIP\Scoiatael_WIP\[]Mimikr\`:
 
-### 4.3 Key Source Files for the Dryad Ranger
-All paths relative to `D:\Gwent_Source_Code\Gwent\Gwent\GwentUnity\Gwent\Assets\`:
+| File | Purpose |
+|------|---------|
+| `[]Mimikr.fbx` | 3D mesh (UV-mapped parallax diorama) |
+| `[]Mimikr_AC.controller` | Animation controller (parallax/breathing animation) |
+| `[]Mimikr_mat_1_1.mat` through `_mat_1_4.mat` | Materials (4 material slots on the mesh) |
 
-- **Scene:** `BundledAssets/CardAssets/Scenes/13490101.unity`
-- **FBX Model:** `PremiumCards/Scoiatael/[13490300]DryadRanger/[13490300]DryadRanger.fbx`
-- **Atlas Material:** `PremiumCards/Scoiatael/[13490300]DryadRanger/Materials/[13490300]DryadRanger-Atlas.mat`
-- **Animation Controllers:**
-  - `[13490100]DryadRanger_AC_model.controller`
-  - `[13490100]DryadRanger_AC_master.controller`
-- **VFX Materials:** DryadRanger_LensPostFX.mat, DryadRanger_leaf_all.mat, etc.
-- **VFX Textures:** Leaf/petal particle textures (PNG)
+Additional assets:
+- **Prefab:** `Assets/PremiumCards/WIP/_Prefabs_WIP/[]Mimikr.prefab` — pre-assembled prefab (may have scene structure)
+- **Atlas texture:** `Assets/PremiumCards/WIP/_Textures_WIP/_Premium/_Uber/[]Mimikr_Atlas.png`
 
-### 4.4 What Step 2 Requires
+### 4.3 What Mimikr Needs
+A Unity scene file (`{artId}0101.unity`) that the pipeline can build into an AssetBundle. This requires:
 
-**Goal:** Build and deploy the Dryad Ranger premium (ArtId 1349) as a custom premium
-using our pipeline, without borrowing anything from the compiled game — only from the
-decompiled source code assets.
+1. **Understanding the scene hierarchy** — study existing finalized scenes (e.g., Dryad Ranger `13490101.unity`)
+   to understand the required GameObject structure:
+   ```
+   Root → Pivot → model → mesh renderers + VFX
+   ```
+   Key components: `PremiumCardsMeshMaterialHandler` (assigns texture at runtime), `Animator`, `MeshRenderer`
 
-You need to:
+2. **Building the scene** — either:
+   - Create the scene programmatically from a Unity Editor script (like `GenerateElvenDeadeye.cs` was intended to do)
+   - Or open the WIP prefab `[]Mimikr.prefab` in Unity and save it as a scene with the right structure
 
-1. **Update `build.py`** to build the Dryad Ranger (ArtId 1349) instead of / in addition
-   to the Elven Deadeye. The scene file `13490101.unity` already exists in the Unity
-   project, so no donor scene copying is needed.
+3. **The `[]` naming issue** — WIP assets have empty ArtId brackets `[]` instead of `[14XX0300]`. The scene
+   builder may need to handle this. The prefab may already have the correct internal references.
 
-2. **Update `BuildPremiumBundle.cs`** (and possibly `AutoBuildOnLoad.cs`) to build
-   `13490101.unity` → bundle named `1349`. The build method should be similar to the
-   existing `WatcherBuild1832()` but for the Dryad Ranger scene.
-
-3. **Get the Dryad Ranger texture** from the source project assets (not from the game's
-   compiled bundles). It should be in the Unity project's texture assets. Place it at
-   `UnityAssets/Textures/1349.png`.
-
-4. **Update `Core.cs`** if needed — the mod should auto-detect the new ArtId 1349 from
-   the Bundles/Textures directories, so it might work without code changes. However:
-   - The donor AudioId may need updating — check if the Wardancer's audio fits the
-     Dryad Ranger or if we should use the Dryad Ranger's own AudioId
-   - Actually, since the Dryad Ranger IS a real premium card in the game, it already
-     has its own premium audio. The donor approach should still work, but you could
-     also just let it keep its own AudioId.
-
-5. **Test the full pipeline:** `python build.py` should produce a working Dryad Ranger
-   premium visible in-game when viewing the card.
-
-### 4.5 Important Technical Notes
-
-- The Dryad Ranger scene (`13490101.unity`) references an FBX model and materials from
-  `PremiumCards/Scoiatael/[13490300]DryadRanger/`. These are already in the Unity project
-  so the AssetBundle build should include them automatically.
-
-- The bundle must still go through `patch_bundle_shaders.py` because the materials use
-  GwentStandard and VFX shaders that get stripped during build.
-
-- The Dryad Ranger is a **real premium card** that exists in the retail game. When testing,
-  the mod will force its own bundle to load instead of the game's official one. This means
-  you'll be able to compare the custom-built result against the real thing.
-
-- The build pipeline currently hardcodes `ART_ID = "1832"`. Consider making it configurable
-  (e.g., command-line argument or building multiple cards).
-
-### 4.6 Approach: Build From Source Assets Only
-
-The key constraint: we build everything from the **decompiled source code** assets
-(the Unity project at `D:\Gwent_Source_Code\...`), NOT from the compiled game bundles.
-This proves our pipeline can produce premium cards from scratch using only source materials.
-
----
-
-## 5. TECHNICAL REFERENCE
-
-### 5.1 Premium Card Scene Structure (How CDPR Does It)
-CDPR's premium cards are 2.5D parallax dioramas built from:
+### 4.4 How CDPR Scene Structure Works (Reference)
+CDPR's premium cards are 2.5D parallax dioramas:
 - **FBX mesh** with UV-mapped regions pointing to a texture atlas
 - **GwentStandard material** in transparent mode (`_Mode=3`)
 - **Animation controllers** driving mesh deformation for parallax/breathing effects
 - **VFX particle systems** for ambient effects (leaves, dust, glow, etc.)
 - **`PremiumCardsMeshMaterialHandler`** component that assigns the main texture at runtime
+- Scene structure: `Root → Pivot → model → mesh renderers + VFX`
 
-The scene structure follows: `Root → Pivot → model → mesh renderers + VFX`
+**CRITICAL COMPONENT:** `PremiumCardsMeshMaterialHandler` is what makes the texture swap work.
+Without it, Hook 5 can't find where to assign the custom texture. The handler has
+`PremiumTextureAssigments` — an array of material slots that get the atlas texture applied.
 
-### 5.2 AssetBundle Build Process
-1. Scene goes through `BuildPipeline.BuildAssetBundles()` with `UncompressedAssetBundle`
-2. Dependency bundles for `bundledassets/dependencies/*` are built alongside (so Unity
-   creates external references to the shader CABs)
-3. Manifests and extra files are cleaned up
-4. `patch_bundle_shaders.py` fixes shader PPtrs to point at the real game's CAB dependencies
+### 4.5 Approach
+1. Open the Dryad Ranger scene (`13490101.unity`) in Unity to study its hierarchy
+2. Examine the Mimikr prefab to see if it already has the right structure
+3. Write a Unity Editor script to generate a scene from the Mimikr assets
+4. Build with `python build.py` (may need a temporary CARDS config entry)
+5. If it works, apply the same approach to build the Elven Deadeye premium
 
-### 5.3 Wwise Audio System (Reference)
-Gwent uses Wwise middleware for all audio. Premium card ambient sounds follow this chain:
+### 4.6 After Mimikr: Elven Deadeye Premium (Step 3b)
+Once we know how to build a scene from raw assets, we create the Elven Deadeye premium:
+
+**Elven Deadeye Info:**
+- **ArtId:** 1832
+- **TemplateId:** 202184
+- **AudioId:** 1613
+- **Standard texture:** `18320000.png` (in the Unity source project, Standard/Uber/)
+- **No premium assets exist** — no FBX, no materials, no animation, no scene
+
+This is the real challenge: creating a premium card entirely from scratch. Options:
+- Design a custom 3D mesh and materials
+- Repurpose/modify assets from a similar card (e.g., Dryad Ranger's FBX modified for Deadeye)
+- Use the Mimikr approach as a template
+
+---
+
+## 5. TECHNICAL REFERENCE
+
+### 5.1 Tested Donor Cards
+The generic pipeline has been successfully tested with these donors:
+
+| Donor | ArtId | Status | Notes |
+|-------|-------|--------|-------|
+| Dryad Ranger | 1349 | Works perfectly | Released card, full audio |
+| Milva | 1191 | Works perfectly | Released card, full audio |
+| Siren Human Form | 1415 | Renders, no audio | Unreleased — no CardTemplate, no AudioId |
+| Falbeson | 1542 | Renders, no audio | Unreleased — no CardTemplate, no AudioId |
+
+Unreleased cards render fine but have no premium audio because they were never shipped
+(no card template in `data_definitions`, so AudioId lookup fails gracefully).
+
+### 5.2 Available Unreleased Cards with Finalized Scenes
+39 unreleased cards have finalized scenes in the Unity project (can be used as donors):
 ```
-CardTemplate.AudioId → CardAudio XML → CardAudioTrigger (PremiumCardPreview=6)
+Assets/BundledAssets/CardAssets/Scenes/{artId}0101.unity
+```
+These include cards like SirenHumanForm (1415), Falbeson (1542), GernichorasParasite (1544),
+Otkell (1379), and many others from various factions.
+
+### 5.3 Audio System
+**`data_definitions`** is a ZIP file at `StreamingAssets/data_definitions` containing:
+- `Templates.xml` — card templates with AudioId mappings
+- `CardAudio.xml` — 1358 audio definitions mapping AudioId → Wwise events
+- `ArtDefinitions.xml`, `Abilities.xml`, `Personalities.xml`, etc.
+
+**Audio pipeline:**
+```
+CardTemplate.AudioId → CardAudio.xml → CardAudioTrigger (PremiumCardPreview=6)
   → CardSoundEffect (Wwise EventId) → event_inclusion.json → soundbank_inclusion.json
   → .pck file → AkSoundEngine.LoadFilePackage() → AkSoundEngine.LoadBank()
   → AkSoundEngine.PostEvent()
 ```
-See `CustomSoundsGuide.md` for the complete analysis.
+
+**Wwise soundbanks** (`.pck` files) are in `StreamingAssets/audio/`. Card SFX are in
+`cards_ep0_baseset_*.pck`, `cards_EP*.pck`, etc.
 
 ### 5.4 Il2Cpp / MelonLoader Notes
 - The game is compiled with Il2Cpp. MelonLoader's Il2CppInterop exposes private fields
-  as properties (e.g., `template.Template.AudioId` works despite `AudioId` being a field
-  on the `CardTemplate` struct).
-- Harmony patches work on Il2Cpp methods but require the `Il2Cpp` prefixed type names
-  in `using` statements.
+  as properties (e.g., `template.Template.AudioId` works).
+- Harmony patches work on Il2Cpp methods but require `Il2Cpp` prefixed type names.
 - `CardDefinition` is a struct (value type). Harmony `ref` parameters work for modifying it.
+- Some methods are inlined by Il2Cpp AOT compiler (e.g., `GenerateVoiceover(Card, ...)` is
+  a one-liner wrapper — must hook the `int` overload instead).
+- `HandleDefinitionsLoaded` fires twice during game init — use dedup guard.
 
 ### 5.5 Key Enums
 ```
@@ -239,6 +262,21 @@ ECardSoundEffectType: None=0, Standard=1, Premium=2, Ambush=3
 EPremiumMode: Disabled=0, Enabled=1, ...
 ```
 
+### 5.6 AssetBundle Build Process
+1. `AutoBuildOnLoad.cs` detects trigger file, parses `targetArtId:donorArtId`
+2. `BuildPremiumBundle.WatcherBuildGeneric()` copies donor scene → `{targetArtId}.unity`
+3. `BuildPipeline.BuildAssetBundles()` with `UncompressedAssetBundle` + dependency bundles
+4. Cleanup: delete temp scene, manifests, dependency bundle files
+5. `patch_bundle_shaders.py` fixes shader PPtrs to point at real game CABs
+
+### 5.7 Shader System
+- **shaderlibrary** bundle: Contains `GwentStandard` and other main shaders
+  - CAB: `CAB-e59affbfa21235772054ea15448f1070`
+- **shaders** bundle: Contains VFX shaders (`AlphaBlended`, `AdditiveAlpha`, etc.)
+  - CAB: `CAB-c0bb786e78837791c9d84c9a06de6e2b`
+- Dummy `.shader` files in the Unity project replicate property blocks with GUID-spoofed `.meta` files
+- Post-build patcher auto-discovers pid→CAB mapping — no hardcoded values
+
 ---
 
 ## 6. COMPLETED WORK LOG
@@ -246,24 +284,33 @@ EPremiumMode: Disabled=0, Enabled=1, ...
 ### Step 1: Build Pipeline (DONE)
 - Created `build.py` — single-command orchestration of the full build pipeline
 - Created `AutoBuildOnLoad.cs` — file-watcher with background timer for Unity Editor
-- Added `WatcherBuild1832()` to `BuildPremiumBundle.cs` — safe for running editor
-- Moved source texture to `UnityAssets/Textures/1832.png`
+- Created `BuildPremiumBundle.cs` — AssetBundle build with dependency bundles
 
 ### Audio Fix (DONE)
 - Investigated Wwise audio pipeline end-to-end
-- Fixed missing premium sound by setting `CardTemplate.AudioId` to donor's AudioId
+- Fixed premium sound via AudioId swap (Hook 0) + voiceline redirect (Hook 6)
 - Documented full Wwise pipeline in `CustomSoundsGuide.md`
 
-### Step 2: Dryad Ranger as Donor for Elven Deadeye (DONE)
-- Switched donor from Wardancer (1222) to Dryad Ranger (1349) for both scene and audio
-- `WatcherBuild1832()` now copies `13490101.unity` (Dryad Ranger) as donor scene
-- `DonorArtId` changed to 1349 in `Core.cs` — premium sound now comes from Dryad Ranger
-- Added `VFX/Common/AlphaBlended_TwoSided` (path_id `1572382250920393112`) to shader patcher
-- Updated Hook 5 shader fixup for Dryad Ranger VFX materials (`leaf_all`, `leaf_movement`, `petals`)
-- `build.py` now supports CLI args and multi-card builds (extensible for future cards)
+### Step 2: Generic Config-Driven Pipeline (DONE)
+- Made entire pipeline config-driven: just change `CARDS` dict in `build.py`
+- `build.py`: Config dict, trigger format `targetArtId:donorArtId`, auto-texture from source, `donor_config.json`
+- `AutoBuildOnLoad.cs`: Parses `targetArtId:donorArtId`, calls `WatcherBuildGeneric()`
+- `BuildPremiumBundle.cs`: Added `WatcherBuildGeneric(targetArtId, donorArtId)` — derives donor scene path automatically
+- `patch_bundle_shaders.py`: Auto-discovers all shader→CAB mappings from game bundles, fallback to GwentStandard
+- `Core.cs`: Reads `donor_config.json` for per-card donor audio, runtime shader fallback chain, Hook 6 voiceline redirect
+- Deleted `GenerateElvenDeadeye.cs` (superseded by generic pipeline)
+
+### Donor Testing (DONE)
+- Dryad Ranger (1349): Full audio + rendering
+- Milva (1191): Full audio + rendering
+- Siren Human Form (1415): Rendering works (shader fallback needed for 2 VFX materials), no audio (unreleased)
+- Falbeson (1542): Clean rendering (all shaders in game bundles), no audio (unreleased)
 
 ### Commits
 ```
+cc6adb0 Add shader fallback for unknown shaders and test multiple donors
+7ae2365 Make pipeline fully generic and config-driven
+244294c Update handoff document for Step 2 (Dryad Ranger clone)
 03884b6 Add premium sound fix and custom sounds guide
 d6e1057 Add unified build pipeline (build.py)
 6fc929f Add Claude Handoff and UnityScripts
