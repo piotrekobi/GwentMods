@@ -7,7 +7,9 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Il2CppGwentGameplay;
+using Il2CppGwentGameplay.Audio;
 using Il2CppGwentUnity;
+using Il2CppGwentUnity.Audio;
 using Il2CppGwentVisuals;
 
 [assembly: MelonInfo(typeof(CustomPremiums.CustomPremiumsCore), "CustomPremiums", "5.0.0", "piotrekobi")]
@@ -16,14 +18,17 @@ using Il2CppGwentVisuals;
 namespace CustomPremiums
 {
     /// <summary>
-    /// CustomPremiums v5 - Fully self-contained custom premium loading.
-    /// NO donor card dependency. Loads entirely custom scene bundles.
+    /// CustomPremiums v5 - Config-driven custom premium loading.
+    /// Donor card provides premium animation bundle; target card keeps its own voicelines/audio.
     ///
+    ///   HOOK 0: GwentApp.HandleDefinitionsLoaded -> map ArtIds to TemplateIds
     ///   HOOK 1: Card.SetDefinition            -> force IsPremium = true
     ///   HOOK 2: CardDefinition.IsPremiumDisabled -> force return false
     ///   HOOK 3: CardViewAssetComponent.ShouldLoadPremium -> force true for our cards
     ///   HOOK 4: CardAppearanceRequest.HandleTextureRequestsFinished
-    ///           -> take full control: load our custom bundle + scene, skip normal pipeline
+    ///           -> load custom bundle + scene, skip normal pipeline
+    ///   HOOK 5: CardAppearanceRequest.OnAppearanceObjectLoaded
+    ///           -> swap texture with custom art, fix broken shaders
     /// </summary>
     public class CustomPremiumsCore : MelonMod
     {
@@ -38,8 +43,11 @@ namespace CustomPremiums
         // ArtId -> absolute path to custom texture
         public static readonly Dictionary<int, string> CustomTextures = new();
 
-        // ArtId of the donor card whose premium audio we borrow (Elven Wardancer)
-        public const int DonorArtId = 1222;
+        // ArtId -> donor ArtId (loaded from donor_config.json, written by build.py)
+        public static readonly Dictionary<int, int> DonorConfig = new();
+
+        // donorAudioId -> originalAudioId (for voiceline redirection in Hook 6)
+        public static readonly Dictionary<int, int> AudioIdRedirectMap = new();
 
         // Caches
         public static readonly Dictionary<int, AssetBundle> LoadedBundles = new();
@@ -76,14 +84,51 @@ namespace CustomPremiums
 
         private void ScanFiles()
         {
-            string bundlesPath = Path.Combine(GameDir, "Mods", "CustomPremiums", "Bundles");
-            string texturesPath = Path.Combine(GameDir, "Mods", "CustomPremiums", "Textures");
+            string modDir = Path.Combine(GameDir, "Mods", "CustomPremiums");
+            string bundlesPath = Path.Combine(modDir, "Bundles");
+            string texturesPath = Path.Combine(modDir, "Textures");
+            string donorConfigPath = Path.Combine(modDir, "donor_config.json");
 
             Logger.Msg($"[Scan] Bundles dir: {bundlesPath} (exists: {Directory.Exists(bundlesPath)})");
             Logger.Msg($"[Scan] Textures dir: {texturesPath} (exists: {Directory.Exists(texturesPath)})");
 
             if (!Directory.Exists(bundlesPath)) Directory.CreateDirectory(bundlesPath);
             if (!Directory.Exists(texturesPath)) Directory.CreateDirectory(texturesPath);
+
+            // Load donor config (maps artId -> donorArtId for audio)
+            if (File.Exists(donorConfigPath))
+            {
+                try
+                {
+                    string json = File.ReadAllText(donorConfigPath);
+                    // Simple JSON parsing: {"1832": 1349, "1833": 1191}
+                    // MelonLoader doesn't ship Newtonsoft, so parse manually
+                    json = json.Trim().TrimStart('{').TrimEnd('}');
+                    foreach (var pair in json.Split(','))
+                    {
+                        var kv = pair.Split(':');
+                        if (kv.Length == 2)
+                        {
+                            string key = kv[0].Trim().Trim('"');
+                            string val = kv[1].Trim().Trim('"');
+                            if (int.TryParse(key, out int artId) && int.TryParse(val, out int donorId))
+                            {
+                                DonorConfig[artId] = donorId;
+                                Logger.Msg($"[Scan] Donor config: ArtId {artId} -> donor {donorId}");
+                            }
+                        }
+                    }
+                    Logger.Msg($"[Scan] Loaded {DonorConfig.Count} donor mapping(s) from donor_config.json");
+                }
+                catch (Exception e)
+                {
+                    Logger.Warning($"[Scan] Failed to parse donor_config.json: {e.Message}");
+                }
+            }
+            else
+            {
+                Logger.Msg("[Scan] No donor_config.json found (audio will use card's own AudioId)");
+            }
 
             foreach (var file in Directory.GetFiles(bundlesPath))
             {
@@ -123,43 +168,64 @@ namespace CustomPremiums
         {
             public static void Postfix()
             {
+                // Guard: HandleDefinitionsLoaded fires twice during init
+                if (TargetTemplateIds.Count > 0)
+                {
+                    Logger.Msg("[Init] HandleDefinitionsLoaded fired again — skipping (already initialized)");
+                    return;
+                }
+
                 var sharedData = GwentApp.Instance?.SharedData;
                 if (sharedData?.SharedRuntimeTemplates == null) return;
 
-                // First pass: find the donor card's AudioId
-                int donorAudioId = 0;
+                // Collect unique donor ArtIds we need AudioIds for
+                var donorArtIds = new HashSet<int>();
+                foreach (var donorId in DonorConfig.Values)
+                    donorArtIds.Add(donorId);
+
+                // First pass: find AudioIds for all donor cards
+                var donorAudioIds = new Dictionary<int, int>(); // donorArtId -> audioId
                 foreach (var kvp in sharedData.SharedRuntimeTemplates)
                 {
                     var t = kvp.Value;
-                    if (t?.ArtDefinition != null && t.ArtDefinition.ArtId == DonorArtId)
+                    if (t?.ArtDefinition != null && donorArtIds.Contains(t.ArtDefinition.ArtId))
                     {
-                        donorAudioId = t.Template.AudioId;
-                        Logger.Msg($"[Init] Donor AudioId: {donorAudioId} (from ArtId {DonorArtId})");
-                        break;
+                        donorAudioIds[t.ArtDefinition.ArtId] = t.Template.AudioId;
+                        Logger.Msg($"[Init] Donor AudioId: {t.Template.AudioId} (from ArtId {t.ArtDefinition.ArtId})");
                     }
                 }
 
-                // Second pass: register custom cards and set their AudioId to the donor's
+                // Second pass: register custom cards, swap AudioId to donor's for premium SFX
                 foreach (var kvp in sharedData.SharedRuntimeTemplates)
                 {
                     var template = kvp.Value;
                     if (template != null && template.Template != null && template.ArtDefinition != null)
                     {
-                        if (CustomBundles.ContainsKey(template.ArtDefinition.ArtId) || CustomTextures.ContainsKey(template.ArtDefinition.ArtId))
+                        int artId = template.ArtDefinition.ArtId;
+                        if (CustomBundles.ContainsKey(artId) || CustomTextures.ContainsKey(artId))
                         {
                             TargetTemplateIds.Add(template.Template.Id);
-                            TemplateIdToArtId[template.Template.Id] = template.ArtDefinition.ArtId;
-                            Logger.Msg($"[Init] Mapped ArtId {template.ArtDefinition.ArtId} -> TemplateId {template.Template.Id}");
+                            TemplateIdToArtId[template.Template.Id] = artId;
 
-                            if (donorAudioId > 0)
+                            // Swap AudioId to donor's for premium SFX/soundbank loading
+                            // Voicelines are redirected back to original in Hook 6
+                            if (DonorConfig.TryGetValue(artId, out int donorArtId)
+                                && donorAudioIds.TryGetValue(donorArtId, out int donorAudioId))
                             {
-                                int oldAudioId = template.Template.AudioId;
+                                int originalAudioId = template.Template.AudioId;
                                 template.Template.AudioId = donorAudioId;
-                                Logger.Msg($"[Init] AudioId for ArtId {template.ArtDefinition.ArtId}: {oldAudioId} -> {donorAudioId} (donor)");
+                                AudioIdRedirectMap[donorAudioId] = originalAudioId;
+                                Logger.Msg($"[Init] ArtId {artId} -> TemplateId {template.Template.Id}: AudioId {originalAudioId} -> {donorAudioId} (voicelines redirect back via Hook 6)");
+                            }
+                            else
+                            {
+                                Logger.Msg($"[Init] Mapped ArtId {artId} -> TemplateId {template.Template.Id}");
                             }
                         }
                     }
                 }
+
+                Logger.Msg($"[Init] Registered {TargetTemplateIds.Count} custom card(s), {AudioIdRedirectMap.Count} voiceline redirect(s)");
             }
         }
 
@@ -261,8 +327,7 @@ namespace CustomPremiums
                     if (!LoadedBundles.ContainsKey(artId) || LoadedBundles[artId] == null)
                     {
                         Logger.Msg($"[HOOK 4] File exists: {File.Exists(bundlePath)}, size: {(File.Exists(bundlePath) ? new FileInfo(bundlePath).Length : 0)} bytes");
-                        
-                        // Read bytes and use LoadFromMemory (different Unity code path than LoadFromFile)
+
                         var loadedBundle = AssetBundle.LoadFromFile(bundlePath);
                         Logger.Msg($"[HOOK 4] LoadFromFile returned: {(loadedBundle != null ? loadedBundle.name : "NULL")}");
                         LoadedBundles[artId] = loadedBundle;
@@ -375,8 +440,6 @@ namespace CustomPremiums
                     }
 
                     // CRITICAL: Unload the AssetBundle to free the internal name slot!
-                    // Without this, the bundle name (12220101) stays registered and blocks
-                    // both future custom loads AND the game's normal Wardancer premium.
                     if (LoadedBundles.TryGetValue(artId, out var bundle) && bundle != null)
                     {
                         bundle.Unload(false); // false = don't destroy loaded objects
@@ -448,9 +511,9 @@ namespace CustomPremiums
                         }
                     }
 
-                    // Fix VFX materials that couldn't resolve shaders from the 'shaders' dependency bundle.
-                    // The main mesh uses GwentStandard from 'shaderlibrary' (resolved via bundle dependencies).
-                    // VFX shaders are in a separate 'shaders' bundle already loaded by the game.
+                    // Generic fallback: if any material still has InternalErrorShader after
+                    // the build-time patcher ran, try to fix it with GwentStandard at runtime.
+                    // This should rarely trigger — the auto-discovery patcher handles all known shaders.
                     foreach (var r in allRenderers)
                     {
                         if (r == null) continue;
@@ -461,32 +524,15 @@ namespace CustomPremiums
                             if (m == null) continue;
                             if (m.shader != null && m.shader.name == "Hidden/InternalErrorShader")
                             {
-                                // Map material names to their correct shader paths
-                                string correctShader = null;
-                                string matName = m.name;
-                                if (matName.Contains("flash") || matName.Contains("glow") || matName.Contains("flare"))
-                                    correctShader = "VFX/Common/AdditiveAlpha";
-                                else if (matName.Contains("introAll"))
-                                    correctShader = "VFX/Common/AlphaBlended";
-                                else if (matName.Contains("LensPostFX"))
-                                    correctShader = "VFX/Effects/FakePostEffect/Additive_Mask";
-
-                                if (correctShader != null)
+                                var fallback = Shader.Find("GwentStandard");
+                                if (fallback != null)
                                 {
-                                    var found = Shader.Find(correctShader);
-                                    if (found != null)
-                                    {
-                                        m.shader = found;
-                                        Logger.Msg($"[HOOK 5] Fixed shader: {matName} -> {correctShader}");
-                                    }
-                                    else
-                                    {
-                                        Logger.Warning($"[HOOK 5] Shader.Find failed for: {correctShader}");
-                                    }
+                                    m.shader = fallback;
+                                    Logger.Warning($"[HOOK 5] Runtime shader fix: {m.name} -> GwentStandard (fallback)");
                                 }
                                 else
                                 {
-                                    Logger.Warning($"[HOOK 5] Unknown broken material: {matName}");
+                                    Logger.Warning($"[HOOK 5] Broken shader on '{m.name}' — GwentStandard not found");
                                 }
                             }
                         }
@@ -514,6 +560,27 @@ namespace CustomPremiums
                 catch (Exception e)
                 {
                     Logger.Error($"[HOOK 5] Exception: {e}");
+                }
+            }
+        }
+
+        // =====================================================================
+        // HOOK 6: Redirect voicelines back to original AudioId
+        // We swapped AudioId to donor's for premium SFX (Hook 0), but voicelines
+        // should use the original card's AudioId. This hooks the int overload of
+        // GenerateVoiceover which has real logic (not inlined by Il2Cpp, unlike
+        // the Card overload which is a one-liner wrapper).
+        // =====================================================================
+        [HarmonyPatch(typeof(VoiceDuplicateFilter), "GenerateVoiceover",
+            new Type[] { typeof(int), typeof(ECardAudioTriggerType) })]
+        public static class Hook6_VoicelineRedirect
+        {
+            static void Prefix(ref int cardAudioId)
+            {
+                if (AudioIdRedirectMap.TryGetValue(cardAudioId, out int originalAudioId))
+                {
+                    Logger.Msg($"[HOOK 6] Voiceline redirect: AudioId {cardAudioId} -> {originalAudioId}");
+                    cardAudioId = originalAudioId;
                 }
             }
         }

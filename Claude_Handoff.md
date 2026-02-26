@@ -1,6 +1,6 @@
 # GWENT MODDING PROJECT: COMPLETE CONTEXT AND HANDOFF DOCUMENT
 **Target Agent:** Claude Code
-**Current State:** Step 1 Complete, Step 2 Ready — Clone Dryad Ranger Premium
+**Current State:** Step 2 Complete, Step 3 Ready — Build Elven Deadeye Premium
 
 Hello Claude! You are being handed a modding project for the game **Gwent: The Witcher Card Game**. We have built a pipeline to inject custom Premium (animated) cards into the retail game.
 
@@ -15,8 +15,8 @@ The long-term target is the **Elven Deadeye (ArtId: 1832)** — a token card tha
 
 The plan has 3 steps:
 1. **DONE** — Build automation pipeline (`build.py`)
-2. **NOW** — Clone the Dryad Ranger premium as a working baseline
-3. **LATER** — Build a brand-new Elven Deadeye premium from scratch
+2. **DONE** — Clone the Dryad Ranger premium as a working baseline
+3. **NOW** — Build a brand-new Elven Deadeye premium from scratch
 
 ---
 
@@ -253,6 +253,14 @@ EPremiumMode: Disabled=0, Enabled=1, ...
 - Investigated Wwise audio pipeline end-to-end
 - Fixed missing premium sound by setting `CardTemplate.AudioId` to donor's AudioId
 - Documented full Wwise pipeline in `CustomSoundsGuide.md`
+
+### Step 2: Dryad Ranger as Donor for Elven Deadeye (DONE)
+- Switched donor from Wardancer (1222) to Dryad Ranger (1349) for both scene and audio
+- `WatcherBuild1832()` now copies `13490101.unity` (Dryad Ranger) as donor scene
+- `DonorArtId` changed to 1349 in `Core.cs` — premium sound now comes from Dryad Ranger
+- Added `VFX/Common/AlphaBlended_TwoSided` (path_id `1572382250920393112`) to shader patcher
+- Updated Hook 5 shader fixup for Dryad Ranger VFX materials (`leaf_all`, `leaf_movement`, `petals`)
+- `build.py` now supports CLI args and multi-card builds (extensible for future cards)
 
 ### Commits
 ```

@@ -13,6 +13,11 @@ using System.Threading;
 ///   3. Writes "build_result.txt" with "OK" or "FAIL: reason"
 ///   4. External script polls for build_result.txt and reads the outcome
 ///
+/// Compile handshake:
+///   On domain reload (after script recompilation), writes "compile_stamp.txt"
+///   with a timestamp. build.py uses this to confirm new code is active before
+///   sending a build trigger.
+///
 /// Uses a background thread timer so it works even when Unity is unfocused.
 /// </summary>
 [InitializeOnLoad]
@@ -21,9 +26,11 @@ public static class AutoBuildOnLoad
     private static readonly string ProjectRoot = Path.Combine(Application.dataPath, "..");
     private static readonly string TriggerFile = Path.Combine(ProjectRoot, "build_trigger.txt");
     private static readonly string ResultFile = Path.Combine(ProjectRoot, "build_result.txt");
+    private static readonly string CompileStampFile = Path.Combine(ProjectRoot, "compile_stamp.txt");
 
     // Thread-safe flag: background timer sets it, main thread (EditorApplication.update) reads it
     private static volatile bool buildRequested = false;
+    private static volatile string buildArtId = null; // ART_ID read from trigger file
     private static Timer bgTimer;
 
     static AutoBuildOnLoad()
@@ -34,6 +41,9 @@ public static class AutoBuildOnLoad
         // Clean up stale result file on domain reload
         if (File.Exists(ResultFile))
             File.Delete(ResultFile);
+
+        // Write compile stamp so build.py knows scripts have been recompiled
+        File.WriteAllText(CompileStampFile, System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
 
         // Register main-thread update to execute builds
         EditorApplication.update += OnEditorUpdate;
@@ -58,12 +68,15 @@ public static class AutoBuildOnLoad
         {
             if (File.Exists(TriggerFile))
             {
+                // Read the ART_ID from the trigger file content
+                string content = File.ReadAllText(TriggerFile).Trim();
                 File.Delete(TriggerFile);
-                Debug.Log("[BuildWatcher] Trigger detected (background thread).");
+                Debug.Log($"[BuildWatcher] Trigger detected (background thread). ArtId='{content}'");
 
                 if (File.Exists(ResultFile))
                     File.Delete(ResultFile);
 
+                buildArtId = content;
                 buildRequested = true;
             }
         }
@@ -84,12 +97,29 @@ public static class AutoBuildOnLoad
 
     private static void RunBuild()
     {
+        string content = buildArtId ?? "1832:1349";
         try
         {
-            Debug.Log("[BuildWatcher] Building 1832 bundle...");
-            BuildPremiumBundle.WatcherBuild1832();
+            // Parse trigger format: "targetArtId:donorArtId"
+            string targetArtId, donorArtId;
+            if (content.Contains(":"))
+            {
+                var parts = content.Split(':');
+                targetArtId = parts[0].Trim();
+                donorArtId = parts[1].Trim();
+            }
+            else
+            {
+                // Legacy format: just artId (no donor specified)
+                targetArtId = content.Trim();
+                donorArtId = targetArtId;
+            }
+
+            Debug.Log($"[BuildWatcher] Building bundle: target={targetArtId}, donor={donorArtId}...");
+            BuildPremiumBundle.WatcherBuildGeneric(targetArtId, donorArtId);
+
             File.WriteAllText(ResultFile, "OK");
-            Debug.Log("[BuildWatcher] Build complete! Result: OK");
+            Debug.Log($"[BuildWatcher] Build complete for {targetArtId}! Result: OK");
         }
         catch (System.Exception e)
         {

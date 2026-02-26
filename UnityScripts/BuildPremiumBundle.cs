@@ -10,16 +10,20 @@ public class BuildPremiumBundle
         BuildSceneBundle("Assets/BundledAssets/CardAssets/Scenes/14850101.unity", "14850101");
     }
 
-    [MenuItem("Assets/Build Premium Bundle - Elven Wardancer")]
-    public static void BuildElvenWardancer()
+    [MenuItem("Assets/Build Premium Bundle - Dryad Ranger (as 1832)")]
+    public static void BuildDryadRangerAs1832()
     {
-        // To avoid "another AssetBundle with the same files is already loaded" error,
-        // we copy the scene to a unique name.
-        string originalPath = "Assets/BundledAssets/CardAssets/Scenes/12220101.unity";
+        // Copy the Dryad Ranger scene to a unique name to avoid
+        // "another AssetBundle with the same files is already loaded" error.
+        string originalPath = "Assets/BundledAssets/CardAssets/Scenes/13490101.unity";
         string uniquePath = "Assets/BundledAssets/CardAssets/Scenes/1832.unity";
-        
+
+        // Remove stale scene from a previous build
+        if (File.Exists(Path.Combine(Application.dataPath, "..", uniquePath)))
+            AssetDatabase.DeleteAsset(uniquePath);
+
         AssetDatabase.CopyAsset(originalPath, uniquePath);
-        
+
         try
         {
             BuildSceneBundle(uniquePath, "1832");
@@ -53,41 +57,49 @@ public class BuildPremiumBundle
     }
 
     /// <summary>
-    /// Watcher-safe build called by AutoBuildOnLoad. Never calls EditorApplication.Exit().
-    /// If 1832.unity doesn't exist, falls back to copying the Wardancer scene as a donor.
+    /// Generic watcher-safe build called by AutoBuildOnLoad.
+    /// Copies the donor scene (derived from CDPR convention: {donorArtId}0101.unity)
+    /// to a temporary {targetArtId}.unity, builds the bundle, and cleans up.
     /// Throws System.Exception on failure so the watcher can report it.
     /// </summary>
-    public static void WatcherBuild1832()
+    public static void WatcherBuildGeneric(string targetArtId, string donorArtId)
     {
         string outputDir = @"E:\GOG Galaxy\Games\Gwent\Mods\CustomPremiums\Bundles";
-        string scenePath = "Assets/BundledAssets/CardAssets/Scenes/1832.unity";
-        string donorPath = "Assets/BundledAssets/CardAssets/Scenes/12220101.unity";
+        string scenePath = $"Assets/BundledAssets/CardAssets/Scenes/{targetArtId}.unity";
+        string donorPath = $"Assets/BundledAssets/CardAssets/Scenes/{donorArtId}0101.unity";
 
         if (!Directory.Exists(outputDir))
             Directory.CreateDirectory(outputDir);
 
-        bool usedDonor = false;
-        if (!File.Exists(Path.Combine(Application.dataPath, "..", scenePath)))
-        {
-            // No custom 1832 scene yet — copy Wardancer as donor
-            Debug.Log("[WatcherBuild] 1832.unity not found, copying Wardancer donor scene...");
-            if (!AssetDatabase.CopyAsset(donorPath, scenePath))
-                throw new System.Exception($"Failed to copy donor scene {donorPath} -> {scenePath}");
-            usedDonor = true;
-        }
+        // Verify donor scene exists
+        if (!File.Exists(Path.Combine(Application.dataPath, "..", donorPath)))
+            throw new System.Exception($"Donor scene not found: {donorPath}");
+
+        // Always delete stale scene and copy fresh donor
+        if (File.Exists(Path.Combine(Application.dataPath, "..", scenePath)))
+            AssetDatabase.DeleteAsset(scenePath);
+
+        Debug.Log($"[WatcherBuild] Copying donor scene {donorPath} -> {scenePath}...");
+        if (!AssetDatabase.CopyAsset(donorPath, scenePath))
+            throw new System.Exception($"Failed to copy donor scene {donorPath} -> {scenePath}");
 
         try
         {
-            WatcherBuildSceneBundle(scenePath, "1832", outputDir);
+            WatcherBuildSceneBundle(scenePath, targetArtId, outputDir);
         }
         finally
         {
-            if (usedDonor)
-            {
-                AssetDatabase.DeleteAsset(scenePath);
-                Debug.Log("[WatcherBuild] Cleaned up temporary donor scene.");
-            }
+            AssetDatabase.DeleteAsset(scenePath);
+            Debug.Log("[WatcherBuild] Cleaned up temporary donor scene.");
         }
+    }
+
+    /// <summary>
+    /// Legacy method kept for manual menu item use.
+    /// </summary>
+    public static void WatcherBuild1832()
+    {
+        WatcherBuildGeneric("1832", "1349");
     }
 
     private static void WatcherBuildSceneBundle(string scenePath, string bundleName, string outputDir)
