@@ -31,10 +31,12 @@ def scan_game_shaders():
 
     Returns:
         pid_to_cab: dict mapping shader path_id → CAB name (e.g. "CAB-c0bb...")
+        name_to_shader: dict mapping shader name → (path_id, CAB name)
         gwent_standard_pid: the path_id of GwentStandard (for null shader fallback)
         gwent_standard_cab: the CAB name containing GwentStandard
     """
     pid_to_cab = {}
+    name_to_shader = {}  # shader name → (pid, cab)
     gwent_standard_pid = None
     gwent_standard_cab = None
 
@@ -64,6 +66,7 @@ def scan_game_shaders():
                     shader_name = "?"
 
                 pid_to_cab[obj.path_id] = cab_id
+                name_to_shader[shader_name] = (obj.path_id, cab_id)
 
                 # Track GwentStandard for the null-shader fallback
                 if "GwentStandard" in shader_name and gwent_standard_pid is None:
@@ -74,7 +77,7 @@ def scan_game_shaders():
     if gwent_standard_pid:
         print(f"  GwentStandard: pid={gwent_standard_pid} in {gwent_standard_cab}")
 
-    return pid_to_cab, gwent_standard_pid, gwent_standard_cab
+    return pid_to_cab, name_to_shader, gwent_standard_pid, gwent_standard_cab
 
 
 def find_cab_fid(exts, cab_name):
@@ -113,7 +116,7 @@ def patch_bundle(bundle_path):
 
     # Auto-discover shader locations from the game
     print("Scanning game shader bundles...")
-    pid_to_cab, gs_pid, gs_cab = scan_game_shaders()
+    pid_to_cab, name_to_shader, gs_pid, gs_cab = scan_game_shaders()
     if not pid_to_cab:
         print("ERROR: No shaders found in game bundles!")
         return False
@@ -176,9 +179,14 @@ def patch_bundle(bundle_path):
                     if fid != correct_fid:
                         new_fid = correct_fid
                         needs_patch = True
+                elif gs_pid is not None and gs_cab is not None:
+                    # Unknown pid (shader only in Unity project, not in game) → GwentStandard
+                    new_fid = get_fid_for_cab(gs_cab)
+                    new_pid = gs_pid
+                    needs_patch = True
+                    print(f"  FALLBACK: {name} (fid={fid}, pid={pid}) [pid not in game shaders -> GwentStandard]")
                 else:
-                    # Unknown pid — leave as-is but warn
-                    print(f"  WARN: {name} (fid={fid}, pid={pid}) [pid not in game shaders]")
+                    print(f"  WARN: {name} (fid={fid}, pid={pid}) [pid not in game shaders, no fallback]")
                     continue
 
             if needs_patch:

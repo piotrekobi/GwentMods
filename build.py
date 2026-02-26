@@ -30,7 +30,7 @@ import filecmp
 # CONFIGURATION — change donor cards here. That's it.
 # =============================================================================
 CARDS = {
-    "1832": {"donor": "1349"},  # Elven Deadeye ← Dryad Ranger premium
+    "1832": {"donor": "1542"},  # Elven Deadeye ← Falbeson (unreleased, NorthernRealms)
 }
 
 GWENTMODS_DIR = r"E:\Projekty\GwentMods"

@@ -512,8 +512,19 @@ namespace CustomPremiums
                     }
 
                     // Generic fallback: if any material still has InternalErrorShader after
-                    // the build-time patcher ran, try to fix it with GwentStandard at runtime.
-                    // This should rarely trigger — the auto-discovery patcher handles all known shaders.
+                    // the build-time patcher ran, try to fix it with a working shader at runtime.
+                    string[] fallbackNames = {
+                        "ShaderLibrary/Generic/GwentStandard",
+                        "GwentStandard",
+                        "VFX/Common/AlphaBlended",
+                    };
+                    Shader fallbackShader = null;
+                    foreach (var name in fallbackNames)
+                    {
+                        fallbackShader = Shader.Find(name);
+                        if (fallbackShader != null) break;
+                    }
+
                     foreach (var r in allRenderers)
                     {
                         if (r == null) continue;
@@ -524,15 +535,14 @@ namespace CustomPremiums
                             if (m == null) continue;
                             if (m.shader != null && m.shader.name == "Hidden/InternalErrorShader")
                             {
-                                var fallback = Shader.Find("GwentStandard");
-                                if (fallback != null)
+                                if (fallbackShader != null)
                                 {
-                                    m.shader = fallback;
-                                    Logger.Warning($"[HOOK 5] Runtime shader fix: {m.name} -> GwentStandard (fallback)");
+                                    m.shader = fallbackShader;
+                                    Logger.Warning($"[HOOK 5] Runtime shader fix: {m.name} -> {fallbackShader.name}");
                                 }
                                 else
                                 {
-                                    Logger.Warning($"[HOOK 5] Broken shader on '{m.name}' — GwentStandard not found");
+                                    Logger.Warning($"[HOOK 5] Broken shader on '{m.name}' — no fallback shader found");
                                 }
                             }
                         }
