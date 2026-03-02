@@ -101,10 +101,17 @@ public static class AutoBuildOnLoad
         try
         {
             // Parse trigger format:
+            //   "targetArtId:scratch"                         -> create from scratch + build
             //   "targetArtId:prefab:Assets/path/to.prefab"    -> generate scene from prefab
             //   "targetArtId:donorArtId"                      -> clone donor scene
             //   "targetArtId"                                 -> legacy (self-donor)
-            if (content.Contains(":prefab:"))
+            if (content.Contains(":scratch"))
+            {
+                string targetArtId = content.Split(':')[0].Trim();
+                Debug.Log($"[BuildWatcher] Building from scratch: target={targetArtId}...");
+                BuildPremiumBundle.WatcherBuildFromScratch(targetArtId);
+            }
+            else if (content.Contains(":prefab:"))
             {
                 int idx = content.IndexOf(":prefab:");
                 string targetArtId = content.Substring(0, idx).Trim();

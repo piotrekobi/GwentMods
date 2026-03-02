@@ -1,14 +1,56 @@
-"""Compare the game's original Dryad Ranger bundle with our custom-built one."""
-import UnityPy
-import sys
+"""
+Compare two Unity AssetBundles side by side.
 
-ORIGINAL = r"E:\GOG Galaxy\Games\Gwent\Gwent_Data\StreamingAssets\bundledassets\cardassets\scenes\13490101"
-CUSTOM = r"E:\GOG Galaxy\Games\Gwent\Mods\CustomPremiums\Bundles\1832"
+Useful for debugging custom premium card bundles by comparing them against
+official CDPR bundles. Shows materials, shader references, textures,
+GameObjects, and MonoBehaviours — helps spot missing components, wrong
+shader FileIDs, or structural differences.
+
+Usage:
+  python compare_bundles.py <bundle_a> <bundle_b> [label_a] [label_b]
+
+Examples:
+  # Compare your custom bundle against a CDPR original:
+  python compare_bundles.py "E:/GOG Galaxy/Games/Gwent/Gwent_Data/StreamingAssets/AssetBundles/13490101" "E:/GOG Galaxy/Games/Gwent/Mods/CustomPremiums/Bundles/1832" "CDPR Dryad Ranger" "Custom Elven Deadeye"
+
+  # Compare before/after shader patching:
+  python compare_bundles.py build/1832_unpatched build/1832_patched "Before patch" "After patch"
+
+What to look for:
+  - Externals: Your bundle should reference the same CAB hashes as CDPR's
+    (these point to shader bundles like shaderlibrary and shaders)
+  - Materials: Shader fid/pid should be non-zero and point to externals
+    (fid=0 means embedded shader = will render pink/magenta in-game)
+  - MonoBehaviours: Should include PremiumCardsMeshMaterialHandler,
+    CardAppearanceComponent, and RotationScript (script_fid pointing to
+    game assemblies via externals)
+  - GameObjects: Should follow CDPR naming convention ({ArtId}00, Pivot, etc.)
+
+Where to find CDPR bundles:
+  {GameDir}/Gwent_Data/StreamingAssets/AssetBundles/
+  Premium card bundles are named {ArtId}0101 (e.g., 13490101 for Dryad Ranger)
+
+Requires: pip install UnityPy
+"""
+import sys
+import os
+
+try:
+    import UnityPy
+except ImportError:
+    print("Error: UnityPy is required. Install with: pip install UnityPy")
+    sys.exit(1)
+
 
 def dump_bundle(path, label):
     print(f"\n{'='*70}")
-    print(f"  {label}: {path}")
+    print(f"  {label}")
+    print(f"  {path}")
     print(f"{'='*70}")
+
+    if not os.path.isfile(path):
+        print(f"  ERROR: File not found!")
+        return
 
     env = UnityPy.load(path)
 
@@ -41,7 +83,6 @@ def dump_bundle(path, label):
                 pid = data.m_Shader.m_PathID
                 print(f"    {name}: fid={fid}, pid={pid}")
 
-                # Show texture properties
                 if hasattr(data, 'm_SavedProperties'):
                     tex_envs = data.m_SavedProperties.m_TexEnvs
                     if tex_envs:
@@ -64,7 +105,7 @@ def dump_bundle(path, label):
                 fmt = getattr(data, 'm_TextureFormat', '?')
                 print(f"    {name}: {w}x{h}, format={fmt}")
 
-        # Dump MonoBehaviour scripts (components)
+        # Dump MonoBehaviour scripts
         print(f"  MonoBehaviours:")
         for obj in cab.objects.values():
             if obj.type.name == 'MonoBehaviour':
@@ -87,10 +128,23 @@ def dump_bundle(path, label):
                 except:
                     print(f"    (failed to read)")
 
-    import os
     size = os.path.getsize(path)
     print(f"\n  File size: {size:,} bytes")
 
 
-dump_bundle(ORIGINAL, "ORIGINAL (game's 13490101)")
-dump_bundle(CUSTOM, "CUSTOM (our 1832)")
+def main():
+    if len(sys.argv) < 3:
+        print(__doc__.strip())
+        sys.exit(1)
+
+    bundle_a = sys.argv[1]
+    bundle_b = sys.argv[2]
+    label_a = sys.argv[3] if len(sys.argv) > 3 else "BUNDLE A"
+    label_b = sys.argv[4] if len(sys.argv) > 4 else "BUNDLE B"
+
+    dump_bundle(bundle_a, label_a)
+    dump_bundle(bundle_b, label_b)
+
+
+if __name__ == "__main__":
+    main()

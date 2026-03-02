@@ -143,6 +143,31 @@ public class BuildPremiumBundle
     }
 
     /// <summary>
+    /// Build from scratch — creates all assets programmatically (meshes, materials,
+    /// animations, prefab), then builds the AssetBundle from the generated prefab.
+    /// Used for cards with no existing premium assets.
+    /// </summary>
+    public static void WatcherBuildFromScratch(string targetArtId)
+    {
+        Debug.Log($"[WatcherBuild] Creating premium card from scratch: ArtId={targetArtId}");
+
+        // Step 1: Create all assets and get the prefab path
+        string prefabPath = CreateElvenDeadeyePrefab.Create(targetArtId);
+
+        if (string.IsNullOrEmpty(prefabPath))
+            throw new System.Exception("Prefab creation failed — no path returned");
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (prefab == null)
+            throw new System.Exception($"Created prefab not found at: {prefabPath}");
+
+        Debug.Log($"[WatcherBuild] Prefab created at {prefabPath}, proceeding to build bundle...");
+
+        // Step 2: Build the bundle from the generated prefab (reuses existing method)
+        WatcherBuildFromPrefab(targetArtId, prefabPath);
+    }
+
+    /// <summary>
     /// Legacy method kept for manual menu item use.
     /// </summary>
     public static void WatcherBuild1832()

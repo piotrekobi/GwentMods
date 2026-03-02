@@ -13,6 +13,7 @@ Config-driven: just change the CARDS dict below.
 Supported config modes:
   {"donor": "1349"}                     - clone a donor card's scene
   {"prefab": "Assets/path/to.prefab"}   - build scene from a WIP prefab
+  {"scratch": True}                     - create from scratch (meshes, anims, prefab)
   Optional keys:
     "texture": "Assets/path/to.png"     - custom texture (relative to Unity project)
     "donor": "1349"                     - donor card for premium SFX audio
@@ -38,9 +39,8 @@ import filecmp
 # =============================================================================
 CARDS = {
     "1832": {
-        "prefab": "Assets/PremiumCards/WIP/_Prefabs_WIP/[]Mimikr.prefab",
-        "texture": "Assets/PremiumCards/WIP/_Textures_WIP/_Premium/_Uber/[]Mimikr_Atlas.png",
-        "donor": "1349",  # Dryad Ranger audio for premium SFX
+        "scratch": True,   # Build from scratch (create meshes, anims, prefab automatically)
+        "donor": "1349",   # Dryad Ranger audio for premium SFX
     },
 }
 
@@ -153,17 +153,21 @@ def step1_sync_scripts():
 # STEP 2: Build AssetBundle via Unity (running editor)
 # ─────────────────────────────────────────────────────────────
 def step2_build_bundle(art_id, card_cfg):
+    scratch = card_cfg.get("scratch", False)
     prefab_path = card_cfg.get("prefab")
     donor_id = card_cfg.get("donor")
 
-    if prefab_path:
+    if scratch:
+        step_header(2, f"Build AssetBundle (ArtId {art_id} <- From Scratch)")
+        trigger_content = f"{art_id}:scratch"
+    elif prefab_path:
         step_header(2, f"Build AssetBundle (ArtId {art_id} <- Prefab)")
         trigger_content = f"{art_id}:prefab:{prefab_path}"
     elif donor_id:
         step_header(2, f"Build AssetBundle (ArtId {art_id} <- Donor {donor_id})")
         trigger_content = f"{art_id}:{donor_id}"
     else:
-        fail(f"Card {art_id}: needs 'prefab' or 'donor' key in config")
+        fail(f"Card {art_id}: needs 'scratch', 'prefab', or 'donor' key in config")
 
     bundle_path = os.path.join(BUNDLE_OUTPUT_DIR, art_id)
     os.makedirs(BUNDLE_OUTPUT_DIR, exist_ok=True)
@@ -273,8 +277,9 @@ def step5_deploy(cards_to_build):
             if not os.path.isfile(texture_src):
                 fail(f"Custom texture not found: {texture_src}")
 
-        # 2. Auto-lookup from donor's premium texture
-        if texture_src is None and "donor" in card_cfg:
+        # 2. Auto-lookup from donor's premium texture (skip for scratch builds —
+        #    donor is audio-only, the texture comes from UnityAssets/Textures/)
+        if texture_src is None and "donor" in card_cfg and not card_cfg.get("scratch"):
             donor_id = card_cfg["donor"]
             texture_src = os.path.join(PREMIUM_TEXTURE_DIR, f"{donor_id}0100.png")
 
@@ -320,7 +325,12 @@ def main():
     print("=" * 60)
     print("  CUSTOM PREMIUMS — UNIFIED BUILD PIPELINE")
     for k, v in cards_to_build.items():
-        source = f"prefab {v['prefab']}" if "prefab" in v else f"donor {v.get('donor', '?')}"
+        if v.get("scratch"):
+            source = "scratch (from-scratch build)"
+        elif "prefab" in v:
+            source = f"prefab {v['prefab']}"
+        else:
+            source = f"donor {v.get('donor', '?')}"
         print(f"  Card {k} <- {source}")
     print("=" * 60)
 
