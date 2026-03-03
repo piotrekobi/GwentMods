@@ -2,86 +2,56 @@
 using Il2CppGwentGameplay;
 using Il2CppGwentUnity;
 using MelonLoader;
+using System.Text.RegularExpressions;
 
 [assembly: MelonInfo(typeof(Boardify.BoardifyCore), "Boardify", "1.0.0", "Jester")]
-[assembly: MelonGame(null, null)]
+[assembly: MelonGame("CDProjektRED", "Gwent")]
 namespace Boardify
 {
     public class BoardifyCore : MelonMod
     {
-        static MelonPreferences_Category _category;
-        public static MelonPreferences_Entry<string> _boardPref;
-        static string _pendingBoard;
-
+        internal static MelonPreferences_Entry<string> boardPreference = null!;
+        private static string? pendingBoard;
 
         public override void OnInitializeMelon()
         {
-            _category = MelonPreferences.CreateCategory("Boardify");
-            _boardPref = _category.CreateEntry("Boardify", "Yamurlak");
-
-            RegisterTranslations();
-            RegisterSettings();
-
+            boardPreference = MelonPreferences.CreateCategory("Boardify").CreateEntry("Boardify", BoardId.Yamurlak.ToString());
+            RegisterAllBoards();
             HarmonyInstance.PatchAll();
         }
-        Dictionary<string, string> T(string text) =>
-        new[] { "en-us", "pl-pl", "de-de", "ru-ru", "fr-fr", "it-it",
-                "es-es", "es-mx", "pt-br", "zh-cn", "ja-jp", "ko-kr" }
-        .ToDictionary(l => l, l => text);
 
-        void RegisterTranslations()
+        private static void RegisterAllBoards()
         {
-            // Setting label
-            ModSettings.ModSettings.RegisterTranslationKey("Boardify", "Boardify_difficulty", T("Board"));
+            var options = new List<Tuple<string, Func<string>>>();
 
-            // Option labels
-            ModSettings.ModSettings.RegisterTranslationKey("Boardify", BoardId.DefaultMonsters.ToString(), T(BoardId.DefaultMonsters.ToString()));
-            ModSettings.ModSettings.RegisterTranslationKey("Boardify", BoardId.DefaultNilfgaard.ToString(), T(BoardId.DefaultNilfgaard.ToString()));
-            ModSettings.ModSettings.RegisterTranslationKey("Boardify", BoardId.DefaultNorthernRealms.ToString(), T(BoardId.DefaultNorthernRealms.ToString()));
-        }
-
-        void RegisterSettings()
-        {
-            // Define options: List of (id, localization key getter)
-            var options = new List<Tuple<string, Func<string>>>
+            foreach (BoardId board in Enum.GetValues(typeof(BoardId)))
             {
-                Tuple.Create(BoardId.DefaultMonsters.ToString(), (Func<string>)(() => BoardId.DefaultMonsters.ToString())),
-                Tuple.Create(BoardId.DefaultNilfgaard.ToString(), (Func<string>)(() => BoardId.DefaultNilfgaard.ToString())),
-                Tuple.Create(BoardId.DefaultNorthernRealms.ToString(),   (Func<string>)(() => BoardId.DefaultNorthernRealms.ToString())),
-            };
+                string key = board.ToString();
+                ModSettings.ModSettings.RegisterTranslationKey("Boardify", key, CreateDummyTranslations(key));
+                options.Add(Tuple.Create(key, () => key));
+            }
 
+            // Register switcher once with all enum options
             ModSettings.ModSettings.RegisterSwitcherSetting(
                 modId: "Boardify",
                 settingKey: "Boardify",
-                displayNameKey: "Board",       // localization key for setting label
+                displayNameKey: "Boardify",
                 switcherOptions: options,
-
-                getCurrentValue: () => _boardPref.Value,  // what's currently saved
-
-                onValueChangedCallback: (val) =>            // user changed the switcher in UI
-                {
-                    string newVal = val as string;
-                    // Only mark as pending if different from saved value
-                    _pendingBoard = (newVal != _boardPref.Value) ? newVal : null;
-                },
-
-                hasPendingChangesCallback: () => _pendingBoard != null,
-
-                applyPendingChangesCallback: () =>          // user clicked Save
-                {
-                    if (_pendingBoard != null)
-                    {
-                        _boardPref.Value = _pendingBoard;
-                        _pendingBoard = null;
-                        // MelonPreferences.Save() is called automatically by ModSettings
-                    }
-                },
-
-                revertPendingChangesCallback: () =>          // user clicked Back/Cancel
-                {
-                    _pendingBoard = null;
-                }
+                getCurrentValue: () => boardPreference.Value, // what's currently saved
+                onValueChangedCallback: val => pendingBoard = val as string != boardPreference.Value ? val as string : null, // user changed the switcher in UI
+                hasPendingChangesCallback: () => pendingBoard != null, // are there unsaved changes?
+                applyPendingChangesCallback: () => { if (pendingBoard != null) { boardPreference.Value = pendingBoard; pendingBoard = null; } }, // user clicked Save
+                revertPendingChangesCallback: () => pendingBoard = null // user clicked Back/Cancel
             );
+        }
+
+        private static Dictionary<string, string> CreateDummyTranslations(string baseText)
+        {
+            string readableText = Regex.Replace(baseText, "(?<!^)([A-Z])", " $1"); // Insert space before uppercase letters following lowercase letters
+            var dict = new Dictionary<string, string>();
+            foreach (var lang in new List<string> { "en-us", "pl-pl", "de-de", "ru-ru", "fr-fr", "it-it", "es-es", "es-mx", "pt-br", "zh-cn", "ja-jp", "ko-kr" }) 
+                dict[lang] = $"{readableText}"/*+"({lang.ToUpper()})"*/;
+            return dict;
         }
     }
 
@@ -96,12 +66,16 @@ namespace Boardify
                 if (definition == null)
                     return;
 
-                MelonLogger.Error(BoardifyCore._boardPref.Value);
-                int desired = (int) Enum.Parse(typeof(BoardId), BoardifyCore._boardPref.Value);
-                if (definition.ArtId != desired)
+                MelonLogger.Msg("Current board preference: " + BoardifyCore.boardPreference.Value);
+                int desiredBoard = (int)Enum.Parse(typeof(BoardId), BoardifyCore.boardPreference.Value);
+                if (definition.ArtId != desiredBoard)
                 {
-                    definition.ArtId = desired;
-                    MelonLogger.Msg($"Forced Board ArtId to {desired}");
+                    definition.ArtId = desiredBoard;
+                    MelonLogger.Msg($"Forced Board ArtId to {desiredBoard}");
+                }
+                else
+                {
+                    MelonLogger.Msg($"Board ArtId already was {desiredBoard}");
                 }
             }
             catch (Exception ex)
@@ -110,9 +84,6 @@ namespace Boardify
             }
         }
     }
-
-    // gonna leave this here for now if cause it might be needed later (this patched later than the LoadBoard patch, possibly leading to a small stutter)
-    //[HarmonyPatch(typeof(BoardLoader), "OnBoardVisualsReady")] public static class Patch_OnBoardVisualsReady { static void Prefix(BoardLoader __instance) { try { var definition = __instance.m_BoardArtDefinition; if (definition == null) return; int desired = (int)ArtId.YarugaBridge; definition.ArtId = desired; MelonLogger.Msg($"Forced Board ArtId to {(int)desired}"); } catch (Exception ex) { MelonLogger.Error(ex.ToString()); } } }
 
     internal enum BoardId
     {
