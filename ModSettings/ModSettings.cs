@@ -44,7 +44,7 @@ namespace ModSettings
         {
             public string ModId; public string SettingKey; public string DisplayNameKey; public SettingType Type;
             public Func<object> GetCurrentValue; public Action<object> OnValueChanged;
-            public List<System.Tuple<string, Func<string>>> SwitcherOptions;
+            public List<Tuple<string, Func<string>>> SwitcherOptions;
             public UISettingsEntry UIEntry; public Switcher UISwitcher;
         }
 
@@ -110,7 +110,7 @@ namespace ModSettings
         }
 
         public static void RegisterSwitcherSetting(string modId, string settingKey, string displayNameKey,
-            List<System.Tuple<string, Func<string>>> switcherOptions,
+            List<Tuple<string, Func<string>>> switcherOptions,
             Func<object> getCurrentValue, Action<object> onValueChangedCallback,
             Func<bool> hasPendingChangesCallback, Action applyPendingChangesCallback, Action revertPendingChangesCallback)
         {

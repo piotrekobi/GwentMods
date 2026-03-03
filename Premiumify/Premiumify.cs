@@ -41,10 +41,10 @@ namespace Premiumify
 
             RegisterPremiumifyTranslations();
 
-            var switcherOptions = new SystemCollectionsGeneric.List<System.Tuple<string, Func<string>>>
+            var switcherOptions = new List<Tuple<string, Func<string>>>
             {
-                System.Tuple.Create("enabled", (Func<string>)(() => EnabledLocKey)),
-                System.Tuple.Create("disabled", (Func<string>)(() => DisabledLocKey)),
+                System.Tuple.Create("enabled", () => EnabledLocKey),
+                System.Tuple.Create("disabled", () => DisabledLocKey),
             };
 
             ModSettings.ModSettings.RegisterSwitcherSetting(ModId, PremiumifySettingKey, PremiumifySettingLocKey,
@@ -75,17 +75,17 @@ namespace Premiumify
 
         private static void RegisterPremiumifyTranslations()
         {
-            var settingTranslations = new SystemCollectionsGeneric.Dictionary<string, string>() {
+            var settingTranslations = new Dictionary<string, string>() {
                 { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" },
                 { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }};
             ModSettings.ModSettings.RegisterTranslationKey(ModId, PremiumifySettingLocKey, settingTranslations);
 
-            var enabledTranslations = new SystemCollectionsGeneric.Dictionary<string, string>() {
+            var enabledTranslations = new Dictionary<string, string>() {
                 { "en-us", "ENABLED" }, { "pl-pl", "WŁĄCZONE" }, { "de-de", "AKTIVIERT" }, { "ru-ru", "ВКЛЮЧЕНО" }, { "fr-fr", "ACTIVÉ" }, { "it-it", "ABILITATO" }, { "es-es", "ACTIVADO" },
                 { "es-mx", "ACTIVADO" }, { "pt-br", "ATIVADO" }, { "zh-cn", "已启用" }, { "ja-jp", "有効" }, { "ko-kr", "활성화됨" }};
             ModSettings.ModSettings.RegisterTranslationKey(ModId, EnabledLocKey, enabledTranslations);
 
-            var disabledTranslations = new SystemCollectionsGeneric.Dictionary<string, string>() {
+            var disabledTranslations = new Dictionary<string, string>() {
                 { "en-us", "DISABLED" }, { "pl-pl", "WYŁĄCZONE" }, { "de-de", "DEAKTIVIERT" }, { "ru-ru", "ОТКЛЮЧЕНО" }, { "fr-fr", "DÉSACTIVÉ" }, { "it-it", "DISABILITATO" }, { "es-es", "DESACTIVADO" },
                 { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }};
             ModSettings.ModSettings.RegisterTranslationKey(ModId, DisabledLocKey, disabledTranslations);
@@ -187,7 +187,7 @@ namespace Premiumify
             }
         }
 
-        [HarmonyPatch(typeof(Il2CppGwentGameplay.Card), "Transform")]
+        [HarmonyPatch(typeof(Card), "Transform")]
         public static class Card_Transform_Patch
         {
             static void Postfix(Card __instance)
@@ -196,30 +196,30 @@ namespace Premiumify
             }
         }
 
-        [HarmonyPatch(typeof(Il2CppGwentVisuals.CardBattleViewAnimation), "SetFaceUpInstant")]
+        [HarmonyPatch(typeof(CardBattleViewAnimation), "SetFaceUpInstant")]
         public static class CardBattleViewAnimation_SetFaceUpInstant_Patch
         {
-            static void Postfix(Il2CppGwentVisuals.CardBattleViewAnimation __instance)
+            static void Postfix(CardBattleViewAnimation __instance)
             {
                 if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }
 
-        [HarmonyPatch(typeof(Il2CppGwentVisuals.CardBattleViewAnimation), "SetFaceUp", [typeof(bool), typeof(bool)])]
+        [HarmonyPatch(typeof(CardBattleViewAnimation), "SetFaceUp", [typeof(bool), typeof(bool)])]
         public static class CardBattleViewAnimation_SetFaceUp_Bool_Bool_Patch
         {
-            static void Postfix(Il2CppGwentVisuals.CardBattleViewAnimation __instance)
+            static void Postfix(CardBattleViewAnimation __instance)
             {
                 if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }
 
-        [HarmonyPatch(typeof(Il2CppGwentVisuals.CardBattleViewAnimation), "SetFaceUp", [typeof(bool), typeof(bool), typeof(bool)])]
+        [HarmonyPatch(typeof(CardBattleViewAnimation), "SetFaceUp", [typeof(bool), typeof(bool), typeof(bool)])]
         public static class CardBattleViewAnimation_SetFaceUp_Bool_Bool_Bool_Patch
         {
-            static void Postfix(Il2CppGwentVisuals.CardBattleViewAnimation __instance)
+            static void Postfix(CardBattleViewAnimation __instance)
             {
                 if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);

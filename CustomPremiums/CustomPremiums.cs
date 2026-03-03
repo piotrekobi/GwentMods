@@ -229,7 +229,7 @@ namespace CustomPremiums
         // =====================================================================
         // HOOK 1: Force IsPremium = true
         // =====================================================================
-        [HarmonyPatch(typeof(Il2CppGwentGameplay.Card), "SetDefinition")]
+        [HarmonyPatch(typeof(Card), "SetDefinition")]
         public static class Hook1_SetDefinition
         {
             static void Prefix(ref CardDefinition newDefinition)
@@ -246,7 +246,7 @@ namespace CustomPremiums
         // =====================================================================
         // HOOK 2: Bypass IsPremiumDisabled (proven struct patch)
         // =====================================================================
-        [HarmonyPatch(typeof(Il2CppGwentGameplay.CardDefinition), "IsPremiumDisabled")]
+        [HarmonyPatch(typeof(CardDefinition), "IsPremiumDisabled")]
         public static class Hook2_IsPremiumDisabled
         {
             static bool Prefix(ref CardDefinition __instance, ref bool __result)
