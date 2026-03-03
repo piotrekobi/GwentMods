@@ -1,13 +1,13 @@
-﻿using System.Collections;
-using MelonLoader;
-using UnityEngine;
-using HarmonyLib;
-using Il2CppGwentUnity;
-using UnityEngine.UI;
+﻿using HarmonyLib;
 using Il2CppCrimsonUI;
-using Il2CppTMPro;
+using Il2CppGwentUnity;
 using Il2CppLocalization;
+using Il2CppTMPro;
+using MelonLoader;
+using System.Collections;
 using System.Diagnostics;
+using UnityEngine;
+using UnityEngine.UI;
 
 [assembly: MelonInfo(typeof(ModSettings.ModSettings), "ModSettings", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -252,7 +252,8 @@ namespace ModSettings
 
                         switcher.OnArrowClicked?.RemoveAllListeners(); switcher.OnArrowClicked?.AddListener((Il2CppSystem.Action)(() => { }));
                         switcher.OnValueChanged?.RemoveAllListeners();
-                        switcher.OnValueChanged?.AddListener((Il2CppSystem.Action<Switcher>)((Switcher s) => {
+                        switcher.OnValueChanged?.AddListener((Il2CppSystem.Action<Switcher>)((Switcher s) =>
+                        {
                             if (s?.Value == null) return;
                             localSetting.OnValueChanged(s.Value.Id);
                             UpdateSubmitButtonState();
@@ -377,11 +378,11 @@ namespace ModSettings
             var iPanel = _panelInstanceForListener?.m_SettingsInnerPanel; if (iPanel == null) return; var catsPlacement = iPanel.m_CategoriesPlacement;
             var iPanelCG = iPanel.GetComponent<CanvasGroup>() ?? iPanel.gameObject.AddComponent<CanvasGroup>(); iPanelCG.interactable = true; iPanelCG.blocksRaycasts = true; iPanelCG.alpha = 1f;
             if (catsPlacement != null) for (int i = 0; i < catsPlacement.childCount; i++)
-                {
-                    var child = catsPlacement.GetChild(i); if (child == null) continue;
-                    bool isOurModContainer = _modCategoryContainerGO != null && child.gameObject.GetInstanceID() == _modCategoryContainerGO.GetInstanceID();
-                    if (!isOurModContainer && child.gameObject.activeSelf) child.gameObject.SetActive(false); else if (isOurModContainer && !child.gameObject.activeSelf) child.gameObject.SetActive(true);
-                }
+            {
+                var child = catsPlacement.GetChild(i); if (child == null) continue;
+                bool isOurModContainer = _modCategoryContainerGO != null && child.gameObject.GetInstanceID() == _modCategoryContainerGO.GetInstanceID();
+                if (!isOurModContainer && child.gameObject.activeSelf) child.gameObject.SetActive(false); else if (isOurModContainer && !child.gameObject.activeSelf) child.gameObject.SetActive(true);
+            }
         }
 
         private static void ShowOriginalCategory(SettingsCategory catToShow)
@@ -394,10 +395,10 @@ namespace ModSettings
             {
                 LogError($"ShowCategory for {catToShow} failed. Fallback...", ex); var catsPlacement = iPanel.m_CategoriesPlacement;
                 if (catsPlacement != null) for (int i = 0; i < catsPlacement.childCount; i++)
-                    {
-                        var child = catsPlacement.GetChild(i); if (child == null) continue;
-                        bool shouldBeActive = child.name.Equals(catToShow.ToString(), StringComparison.OrdinalIgnoreCase); if (child.gameObject.activeSelf != shouldBeActive) child.gameObject.SetActive(shouldBeActive);
-                    }
+                {
+                    var child = catsPlacement.GetChild(i); if (child == null) continue;
+                    bool shouldBeActive = child.name.Equals(catToShow.ToString(), StringComparison.OrdinalIgnoreCase); if (child.gameObject.activeSelf != shouldBeActive) child.gameObject.SetActive(shouldBeActive);
+                }
             }
         }
 

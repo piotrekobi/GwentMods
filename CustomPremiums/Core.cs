@@ -1,16 +1,13 @@
-using System;
-using System.IO;
-using System.Collections;
-using System.Collections.Generic;
-using MelonLoader;
 using HarmonyLib;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using Il2CppGwentGameplay;
 using Il2CppGwentGameplay.Audio;
 using Il2CppGwentUnity;
 using Il2CppGwentUnity.Audio;
 using Il2CppGwentVisuals;
+using MelonLoader;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [assembly: MelonInfo(typeof(CustomPremiums.CustomPremiumsCore), "CustomPremiums", "5.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -387,7 +384,7 @@ namespace CustomPremiums
                     // Find the loaded scene
                     string scenePath = request.m_AssetPath;
                     Scene scene = SceneManager.GetSceneByPath(scenePath);
-                    
+
                     Logger.Msg($"[HOOK 4] GetSceneByPath('{scenePath}'): valid={scene.IsValid()}, name='{scene.name}', rootCount={scene.rootCount}");
 
                     if (!scene.IsValid() || scene.rootCount == 0)
@@ -550,7 +547,7 @@ namespace CustomPremiums
 
                     var customTex = LoadedTextures[artId];
                     var matHandler = appearanceObject.GetComponentInChildren<PremiumCardsMeshMaterialHandler>(true);
-                    
+
                     if (matHandler?.PremiumTextureAssigments != null)
                     {
                         foreach (var assignment in matHandler.PremiumTextureAssigments)
