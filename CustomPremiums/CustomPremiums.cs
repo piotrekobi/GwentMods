@@ -79,7 +79,7 @@ namespace CustomPremiums
             }
         }
 
-        private void ScanFiles()
+        private static void ScanFiles()
         {
             string modDir = Path.Combine(GameDir, "Mods", "CustomPremiums");
             string bundlesPath = Path.Combine(modDir, "Bundles");
@@ -482,7 +482,7 @@ namespace CustomPremiums
                     if (!LoadedTextures.ContainsKey(artId))
                     {
                         byte[] fileData = File.ReadAllBytes(texPath);
-                        Texture2D tex = new Texture2D(2, 2);
+                        Texture2D tex = new(2, 2);
                         ImageConversion.LoadImage(tex, fileData);
                         LoadedTextures[artId] = tex;
                         Logger.Msg($"[HOOK 5] Loaded texture from disk ({fileData.Length} bytes)");
@@ -510,11 +510,11 @@ namespace CustomPremiums
 
                     // Generic fallback: if any material still has InternalErrorShader after
                     // the build-time patcher ran, try to fix it with a working shader at runtime.
-                    string[] fallbackNames = {
+                    string[] fallbackNames = [
                         "ShaderLibrary/Generic/GwentStandard",
                         "GwentStandard",
                         "VFX/Common/AlphaBlended",
-                    };
+                    ];
                     Shader fallbackShader = null;
                     foreach (var name in fallbackNames)
                     {
@@ -587,8 +587,7 @@ namespace CustomPremiums
         // GenerateVoiceover which has real logic (not inlined by Il2Cpp, unlike
         // the Card overload which is a one-liner wrapper).
         // =====================================================================
-        [HarmonyPatch(typeof(VoiceDuplicateFilter), "GenerateVoiceover",
-            new Type[] { typeof(int), typeof(ECardAudioTriggerType) })]
+        [HarmonyPatch(typeof(VoiceDuplicateFilter), "GenerateVoiceover", [typeof(int), typeof(ECardAudioTriggerType)])]
         public static class Hook6_VoicelineRedirect
         {
             static void Prefix(ref int cardAudioId)

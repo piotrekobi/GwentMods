@@ -136,7 +136,7 @@ namespace ModSettings
             static void Postfix(UISettingsPanel __instance)
             {
                 Log("HandleShowing Postfix"); if (__instance == null) { LogError("HandleShowing: __instance NULL!"); return; }
-                ModSettings.InjectAllModTranslations();
+                InjectAllModTranslations();
                 try
                 {
                     _panelInstanceForListener = __instance; FindAndCacheSubmitButton(__instance);
@@ -167,8 +167,8 @@ namespace ModSettings
                 if (templateEntryGO == null) { LogError("InitializeModUIFramework: Template Entry GO Null."); return; }
                 try
                 {
-                    if (_modCategoryContainerGO != null) GameObject.Destroy(_modCategoryContainerGO);
-                    _modCategoryContainerGO = GameObject.Instantiate(templateCatGO, cats); if (_modCategoryContainerGO == null) throw new Exception("Instantiate mod category container failed.");
+                    if (_modCategoryContainerGO != null) UnityEngine.Object.Destroy(_modCategoryContainerGO);
+                    _modCategoryContainerGO = UnityEngine.Object.Instantiate(templateCatGO, cats) ?? throw new Exception("Instantiate mod category container failed.");
                     _modCategoryContainerGO.name = ModCategoryContainerName;
                     if (_modCategoryContainerGO.GetComponent<UIGeneralSettingsCategory>() is Behaviour b1) b1.enabled = false; if (_modCategoryContainerGO.GetComponent<UISettingsCategory>() is Behaviour b2) b2.enabled = false;
                     var cg = _modCategoryContainerGO.GetComponent<CanvasGroup>() ?? _modCategoryContainerGO.AddComponent<CanvasGroup>(); cg.interactable = true; cg.blocksRaycasts = true; cg.alpha = 1f; SetLayerRecursively(_modCategoryContainerGO, 5);
@@ -214,7 +214,7 @@ namespace ModSettings
                     }
 
                     Transform scrollT = FindDeepChild(_modCategoryContainerGO.transform, "ScrollView"); Transform contentT = FindDeepChild(scrollT, "PatternHolderFolder") ?? FindDeepChild(scrollT, "Content");
-                    if (contentT != null) for (int i = contentT.childCount - 1; i >= 0; i--) GameObject.Destroy(contentT.GetChild(i).gameObject); else { LogError("InitializeModUIFramework: Content/PatternHolderFolder Null."); return; }
+                    if (contentT != null) for (int i = contentT.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(contentT.GetChild(i).gameObject); else { LogError("InitializeModUIFramework: Content/PatternHolderFolder Null."); return; }
                     _modCategoryContainerGO.SetActive(false); _modUIInitialized = true; if (_configCoroutineHandle != null) MelonCoroutines.Stop(_configCoroutineHandle);
                     _configCoroutineHandle = MelonCoroutines.Start(PopulateModSettingsCoroutine(templateEntryGO, iPanel, contentT)); Log("Mod UI Framework Initialized, starting population coroutine.");
                 }
@@ -231,14 +231,14 @@ namespace ModSettings
                     var setting = RegisteredSettings[i]; GameObject entryInstance = null;
                     try
                     {
-                        entryInstance = GameObject.Instantiate(entryPrefab, contentParent); if (entryInstance == null) throw new Exception($"Instantiate entry for {setting.ModId}_{setting.SettingKey} failed.");
+                        entryInstance = UnityEngine.Object.Instantiate(entryPrefab, contentParent) ?? throw new Exception($"Instantiate entry for {setting.ModId}_{setting.SettingKey} failed.");
                         entryInstance.name = $"{setting.ModId}_{setting.SettingKey}_Entry"; entryInstance.SetActive(true); SetLayerRecursively(entryInstance, 5);
                         var uiSettingsEntry = entryInstance.GetComponent<UISettingsEntry>() ?? throw new Exception("Missing UISettingsEntry component.");
                         if (entryInstance.GetComponent<AControl>() is AControl entryCtrl && innerPanel.GetComponent<AContainer>() is AContainer panelAContainer && entryCtrl.Parent != panelAContainer) panelAContainer.AddChild(entryCtrl);
                         TextMeshProUGUI titleLbl = null; LocalizedTextMeshPro locComp = null; Switcher switcher = entryInstance.GetComponentInChildren<Switcher>(true) ?? throw new Exception("Missing Switcher component.");
                         if (!switcher.gameObject.activeSelf) switcher.gameObject.SetActive(true);
                         foreach (var lbl in entryInstance.GetComponentsInChildren<TextMeshProUGUI>(true)) if (lbl != null && !lbl.transform.IsChildOf(switcher.transform)) { titleLbl = lbl; locComp = titleLbl.GetComponent<LocalizedTextMeshPro>(); break; }
-                        if (titleLbl != null) { if (locComp != null) locComp.enabled = false; titleLbl.text = LocalizationManager.Instance?.TryGetTranslationText(setting.DisplayNameKey) ?? setting.DisplayNameKey; } else LogWarning($"No title label for {setting.SettingKey}");
+                        if (titleLbl != null) { locComp?.enabled = false; titleLbl.text = LocalizationManager.Instance?.TryGetTranslationText(setting.DisplayNameKey) ?? setting.DisplayNameKey; } else LogWarning($"No title label for {setting.SettingKey}");
 
                         var localSetting = setting; int localIndex = i;
                         switcher.ClearItems();
@@ -252,7 +252,7 @@ namespace ModSettings
 
                         switcher.OnArrowClicked?.RemoveAllListeners(); switcher.OnArrowClicked?.AddListener((Il2CppSystem.Action)(() => { }));
                         switcher.OnValueChanged?.RemoveAllListeners();
-                        switcher.OnValueChanged?.AddListener((Il2CppSystem.Action<Switcher>)((Switcher s) =>
+                        switcher.OnValueChanged?.AddListener((Il2CppSystem.Action<Switcher>)(s =>
                         {
                             if (s?.Value == null) return;
                             localSetting.OnValueChanged(s.Value.Id);
@@ -291,7 +291,7 @@ namespace ModSettings
 
                         var updatedSetting = RegisteredSettings[localIndex]; updatedSetting.UIEntry = uiSettingsEntry; updatedSetting.UISwitcher = switcher; RegisteredSettings[localIndex] = updatedSetting; Log($"Configured UI: {localSetting.ModId} - {localSetting.SettingKey}");
                     }
-                    catch (Exception ex) { LogError($"Error setting up UI for {setting.ModId}_{setting.SettingKey}: {ex.Message}", ex); if (entryInstance != null) GameObject.Destroy(entryInstance); }
+                    catch (Exception ex) { LogError($"Error setting up UI for {setting.ModId}_{setting.SettingKey}: {ex.Message}", ex); if (entryInstance != null) UnityEngine.Object.Destroy(entryInstance); }
                 }
                 var catPlace = _modCategoryContainerGO?.transform?.parent; var catRect = _modCategoryContainerGO?.GetComponent<RectTransform>(); var contRect = contentParent?.GetComponent<RectTransform>();
                 if (contRect != null) LayoutRebuilder.ForceRebuildLayoutImmediate(contRect); if (catRect != null) LayoutRebuilder.ForceRebuildLayoutImmediate(catRect); if (catPlace?.GetComponent<RectTransform>() is RectTransform cpRect) LayoutRebuilder.ForceRebuildLayoutImmediate(cpRect);
@@ -331,12 +331,12 @@ namespace ModSettings
 
             static void EnsureListenerAttached(ToggleButtonControl btnCtrl)
             {
-                if (btnCtrl == null) return; if (ModSettings._addedModsButton == null && btnCtrl.name == ModsButtonName) ModSettings._addedModsButton = btnCtrl;
+                if (btnCtrl == null) return; if (_addedModsButton == null && btnCtrl.name == ModsButtonName) _addedModsButton = btnCtrl;
                 try
                 {
                     var onToggle = btnCtrl.OnToggle; if (onToggle == null) return;
-                    ModSettings._persistentToggleListener ??= (ToggleButtonControl tBtn) => { if (tBtn != null) HandleModButtonState(tBtn.GetInstanceID() == ModSettings._addedModsButton?.GetInstanceID() && tBtn.IsToggled); };
-                    onToggle.RemoveListener(ModSettings._persistentToggleListener); onToggle.AddListener(ModSettings._persistentToggleListener);
+                    _persistentToggleListener ??= tBtn => { if (tBtn != null) HandleModButtonState(tBtn.GetInstanceID() == _addedModsButton?.GetInstanceID() && tBtn.IsToggled); };
+                    onToggle.RemoveListener(_persistentToggleListener); onToggle.AddListener(_persistentToggleListener);
                 }
                 catch (Exception e) { LogError($"EnsureListenerAttached Error: {e}"); }
             }
@@ -368,8 +368,8 @@ namespace ModSettings
         private static void CleanupModSettingsUI()
         {
             if (_configCoroutineHandle != null) { MelonCoroutines.Stop(_configCoroutineHandle); _configCoroutineHandle = null; }
-            for (int i = 0; i < RegisteredSettings.Count; i++) { var s = RegisteredSettings[i]; if (s.UIEntry?.gameObject != null) GameObject.Destroy(s.UIEntry.gameObject); s.UIEntry = null; s.UISwitcher = null; RegisteredSettings[i] = s; }
-            if (_modCategoryContainerGO != null) { GameObject.Destroy(_modCategoryContainerGO); _modCategoryContainerGO = null; }
+            for (int i = 0; i < RegisteredSettings.Count; i++) { var s = RegisteredSettings[i]; if (s.UIEntry?.gameObject != null) UnityEngine.Object.Destroy(s.UIEntry.gameObject); s.UIEntry = null; s.UISwitcher = null; RegisteredSettings[i] = s; }
+            if (_modCategoryContainerGO != null) { UnityEngine.Object.Destroy(_modCategoryContainerGO); _modCategoryContainerGO = null; }
             _modUIInitialized = false; Log("Mod Settings UI Cleaned Up.");
         }
 
@@ -414,7 +414,7 @@ namespace ModSettings
             static bool Prefix(AControl control)
             {
                 Log($"OnCategoryButtonToggled Prefix: Control '{control?.name ?? "NULL"}'");
-                try { if (ModSettings._addedModsButton != null && control?.GetInstanceID() == ModSettings._addedModsButton.GetInstanceID()) return false; if (_modCategoryContainerGO?.activeSelf == true) { _modCategoryContainerGO.SetActive(false); Log("Hiding MODS container."); } return true; }
+                try { if (_addedModsButton != null && control?.GetInstanceID() == _addedModsButton.GetInstanceID()) return false; if (_modCategoryContainerGO?.activeSelf == true) { _modCategoryContainerGO.SetActive(false); Log("Hiding MODS container."); } return true; }
                 catch (Exception ex) { LogError("OnCategoryButtonToggled Prefix Error", ex); if (_modCategoryContainerGO?.activeSelf == true) _modCategoryContainerGO.SetActive(false); return true; }
             }
         }

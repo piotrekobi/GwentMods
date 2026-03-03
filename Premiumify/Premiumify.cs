@@ -43,8 +43,8 @@ namespace Premiumify
 
             var switcherOptions = new List<Tuple<string, Func<string>>>
             {
-                System.Tuple.Create("enabled", () => EnabledLocKey),
-                System.Tuple.Create("disabled", () => DisabledLocKey),
+                Tuple.Create("enabled", () => EnabledLocKey),
+                Tuple.Create("disabled", () => DisabledLocKey),
             };
 
             ModSettings.ModSettings.RegisterSwitcherSetting(ModId, PremiumifySettingKey, PremiumifySettingLocKey,
@@ -145,7 +145,7 @@ namespace Premiumify
         {
             static void Postfix(Card __instance)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive) PremiumHelper.ApplyPremium(__instance);
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive) PremiumHelper.ApplyPremium(__instance);
             }
         }
 
@@ -154,11 +154,11 @@ namespace Premiumify
         {
             static void Prefix(Card card)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
             }
             static void Postfix(Card card)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
             }
         }
 
@@ -167,12 +167,12 @@ namespace Premiumify
         {
             static void Prefix(ref CardDefinition definition)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && !definition.IsPremium && definition.TemplateId != 0)
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && !definition.IsPremium && definition.TemplateId != 0)
                     definition.IsPremium = true;
             }
             static void Postfix(Card __instance)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
             }
         }
 
@@ -181,7 +181,7 @@ namespace Premiumify
         {
             static void Postfix(SelectChoicesHandlerComponent __instance)
             {
-                if (Premiumify.enablePremiumifyPref.Value != 1 || !Premiumify._isGameplaySceneCurrentlyActive || __instance == null) return;
+                if (enablePremiumifyPref.Value != 1 || !_isGameplaySceneCurrentlyActive || __instance == null) return;
                 if (__instance.m_ValidChoiceCards != null) foreach (var card in __instance.m_ValidChoiceCards) PremiumHelper.ApplyPremium(card);
                 if (__instance.m_SelectedChoiceCards != null) foreach (var card in __instance.m_SelectedChoiceCards) PremiumHelper.ApplyPremium(card);
             }
@@ -192,7 +192,7 @@ namespace Premiumify
         {
             static void Postfix(Card __instance)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
             }
         }
 
@@ -201,7 +201,7 @@ namespace Premiumify
         {
             static void Postfix(CardBattleViewAnimation __instance)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }
@@ -211,7 +211,7 @@ namespace Premiumify
         {
             static void Postfix(CardBattleViewAnimation __instance)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }
@@ -221,7 +221,7 @@ namespace Premiumify
         {
             static void Postfix(CardBattleViewAnimation __instance)
             {
-                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
+                if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }
