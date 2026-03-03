@@ -1,12 +1,12 @@
 ﻿using MelonLoader;
 using System.Diagnostics;
 
-[assembly: MelonInfo(typeof(ModSettingsTest.ModSettingsTestCore), "ModSettingsTest", "1.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(ModSettingsTest.ModSettingsTest), "ModSettingsTest", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace ModSettingsTest
 {
-    public class ModSettingsTestCore : MelonMod
+    public class ModSettingsTest : MelonMod
     {
         private static MelonLogger.Instance staticLogger;
 

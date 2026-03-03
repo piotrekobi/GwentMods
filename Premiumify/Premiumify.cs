@@ -5,12 +5,12 @@ using MelonLoader;
 using System.Diagnostics;
 using SystemCollectionsGeneric = System.Collections.Generic;
 
-[assembly: MelonInfo(typeof(Premiumify.PremiumifyCore), "Premiumify", "1.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(Premiumify.Premiumify), "Premiumify", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace Premiumify
 {
-    public class PremiumifyCore : MelonMod
+    public class Premiumify : MelonMod
     {
         private static MelonLogger.Instance staticLogger;
         internal static MelonPreferences_Category premiumifyCategory;
@@ -56,7 +56,7 @@ namespace Premiumify
                 RevertPendingPremiumifyChanges);
             Log("ModSettings Registered");
 
-            try { HarmonyInstance.PatchAll(typeof(PremiumifyCore).Assembly); Log("Harmony Patched"); }
+            try { HarmonyInstance.PatchAll(typeof(Premiumify).Assembly); Log("Harmony Patched"); }
             catch (Exception e) { LogError("Harmony PatchAll Error", e); }
             Log("Init Complete");
         }
@@ -145,7 +145,7 @@ namespace Premiumify
         {
             static void Postfix(Card __instance)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive) PremiumHelper.ApplyPremium(__instance);
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive) PremiumHelper.ApplyPremium(__instance);
             }
         }
 
@@ -154,11 +154,11 @@ namespace Premiumify
         {
             static void Prefix(Card card)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
             }
             static void Postfix(Card card)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
             }
         }
 
@@ -167,12 +167,12 @@ namespace Premiumify
         {
             static void Prefix(ref CardDefinition definition)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive && !definition.IsPremium && definition.TemplateId != 0)
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && !definition.IsPremium && definition.TemplateId != 0)
                     definition.IsPremium = true;
             }
             static void Postfix(Card __instance)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
             }
         }
 
@@ -181,7 +181,7 @@ namespace Premiumify
         {
             static void Postfix(SelectChoicesHandlerComponent __instance)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value != 1 || !PremiumifyCore._isGameplaySceneCurrentlyActive || __instance == null) return;
+                if (Premiumify.enablePremiumifyPref.Value != 1 || !Premiumify._isGameplaySceneCurrentlyActive || __instance == null) return;
                 if (__instance.m_ValidChoiceCards != null) foreach (var card in __instance.m_ValidChoiceCards) PremiumHelper.ApplyPremium(card);
                 if (__instance.m_SelectedChoiceCards != null) foreach (var card in __instance.m_SelectedChoiceCards) PremiumHelper.ApplyPremium(card);
             }
@@ -192,7 +192,7 @@ namespace Premiumify
         {
             static void Postfix(Card __instance)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
             }
         }
 
@@ -201,7 +201,7 @@ namespace Premiumify
         {
             static void Postfix(Il2CppGwentVisuals.CardBattleViewAnimation __instance)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive &&
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }
@@ -211,7 +211,7 @@ namespace Premiumify
         {
             static void Postfix(Il2CppGwentVisuals.CardBattleViewAnimation __instance)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive &&
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }
@@ -221,7 +221,7 @@ namespace Premiumify
         {
             static void Postfix(Il2CppGwentVisuals.CardBattleViewAnimation __instance)
             {
-                if (PremiumifyCore.enablePremiumifyPref.Value == 1 && PremiumifyCore._isGameplaySceneCurrentlyActive &&
+                if (Premiumify.enablePremiumifyPref.Value == 1 && Premiumify._isGameplaySceneCurrentlyActive &&
                     __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
             }
         }

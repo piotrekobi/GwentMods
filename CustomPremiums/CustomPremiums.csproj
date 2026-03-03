@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="Core.cs" />
+		<Compile Include="CustomPremiums.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

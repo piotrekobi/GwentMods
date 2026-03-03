@@ -298,7 +298,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="Core.cs" />
+		<Compile Include="ModSettingsTest.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

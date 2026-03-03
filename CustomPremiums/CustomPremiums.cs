@@ -9,7 +9,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(CustomPremiums.CustomPremiumsCore), "CustomPremiums", "5.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(CustomPremiums.CustomPremiums), "CustomPremiums", "5.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace CustomPremiums
@@ -27,7 +27,7 @@ namespace CustomPremiums
     ///   HOOK 5: CardAppearanceRequest.OnAppearanceObjectLoaded
     ///           -> swap texture with custom art, fix broken shaders
     /// </summary>
-    public class CustomPremiumsCore : MelonMod
+    public class CustomPremiums : MelonMod
     {
         internal static MelonLogger.Instance Logger;
 
@@ -70,7 +70,7 @@ namespace CustomPremiums
 
             try
             {
-                HarmonyInstance.PatchAll(typeof(CustomPremiumsCore).Assembly);
+                HarmonyInstance.PatchAll(typeof(CustomPremiums).Assembly);
                 Logger.Msg("All Harmony patches applied!");
             }
             catch (Exception e)
