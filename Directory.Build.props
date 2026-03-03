@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <GwentRoot>YOUR GWENT PATH HERE</GwentRoot>
+  </PropertyGroup>
+</Project>

@@ -24,50 +24,50 @@
 
 	<ItemGroup>
 	  <Reference Include="0Harmony">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\net6\0Harmony.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\net6\0Harmony.dll</HintPath>
 	  </Reference>
 	  <Reference Include="Assembly-CSharp">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
 	  </Reference>
 	  <Reference Include="Assembly-CSharp-firstpass">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
 	  </Reference>
 	  <Reference Include="Il2CppInterop.Common">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\net6\Il2CppInterop.Common.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\net6\Il2CppInterop.Common.dll</HintPath>
 	  </Reference>
 	  <Reference Include="Il2CppInterop.HarmonySupport">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\net6\Il2CppInterop.HarmonySupport.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\net6\Il2CppInterop.HarmonySupport.dll</HintPath>
 	  </Reference>
 	  <Reference Include="Il2CppInterop.Runtime">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
 	  </Reference>
 	  <Reference Include="Il2Cppmscorlib">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
 	  </Reference>
 	  <Reference Include="MelonLoader">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\net6\MelonLoader.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\net6\MelonLoader.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.CoreModule">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.ParticleSystemModule">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.ParticleSystemModule.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.ParticleSystemModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.PhysicsModule">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.PhysicsModule.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.PhysicsModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.ImageConversionModule">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.ImageConversionModule.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.ImageConversionModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.AssetBundleModule">
-	    <HintPath>E:\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.AssetBundleModule.dll</HintPath>
+	    <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.AssetBundleModule.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	  <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;E:\GOG Galaxy\Games\Gwent\Mods&quot;" />
+	  <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(GwentRoot)\Mods&quot;" />
 	</Target>
 </Project>
