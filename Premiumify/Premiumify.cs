@@ -3,7 +3,6 @@ using Il2CppGwentGameplay;
 using Il2CppGwentVisuals;
 using MelonLoader;
 using System.Diagnostics;
-using SystemCollectionsGeneric = System.Collections.Generic;
 
 [assembly: MelonInfo(typeof(Premiumify.Premiumify), "Premiumify", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -86,7 +85,7 @@ namespace Premiumify
             ModSettings.ModSettings.RegisterTranslationKey(ModId, DisabledLocKey, new Dictionary<string, string>() {
                 { "en-us", "DISABLED" }, { "pl-pl", "WYŁĄCZONE" }, { "de-de", "DEAKTIVIERT" }, { "ru-ru", "ОТКЛЮЧЕНО" }, { "fr-fr", "DÉSACTIVÉ" }, { "it-it", "DISABILITATO" }, { "es-es", "DESACTIVADO" },
                 { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }});
-            
+
             Log("Translations Registered");
         }
 
