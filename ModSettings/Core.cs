@@ -246,7 +246,11 @@ namespace ModSettings
                         {
                             foreach (var option in localSetting.SwitcherOptions)
                             {
-                                switcher.AddItem(option.Item1, option.Item2(), true);
+                                var key = option.Item2();
+                                var translated = AllModTranslations.TryGetValue(LocalizationManager.Instance?.CurrentLanguage ?? "en-us", out var langDict) && langDict.TryGetValue(key, out var val)
+                                                     ? val // Use the translation if available, otherwise show key
+                                                     : key; 
+                                switcher.AddItem(option.Item1, translated, false);
                             }
                         }
 
