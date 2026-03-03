@@ -21,11 +21,14 @@ A collection of [MelonLoader](https://github.com/LavaGang/MelonLoader) mods for 
 
 ### Project References
 
-All `.csproj` files reference assemblies from the local MelonLoader installation. You'll need to update the `<HintPath>` entries if your Gwent installation is in a different location:
+All `.csproj` files reference assemblies from the local MelonLoader installation. You'll need to add Directory.Build.props file to root folder with such content:
 ```
-{GameDir}\MelonLoader\
-├── net6\                  # MelonLoader.dll, 0Harmony.dll, Il2CppInterop.Runtime.dll
-└── Il2CppAssemblies\      # Il2Cpp-generated game assemblies
+<Project>
+  <PropertyGroup>
+    <-- Your Gwent path here -->
+    <GwentRoot>C:\Program Files (x86)\GOG Galaxy\Games\Gwent</GwentRoot>
+  </PropertyGroup>
+</Project>
 ```
 
 Built DLLs are automatically copied to `{GameDir}\Mods\` via PostBuild targets in each `.csproj`.
