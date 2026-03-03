@@ -12,23 +12,23 @@
 
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Gwent\MelonLoader\net6\0Harmony.dll</HintPath>
+      <HintPath>$(GwentRoot)\MelonLoader\net6\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Il2CppInterop.Runtime">
-      <HintPath>..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Gwent\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+      <HintPath>$(GwentRoot)\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Il2Cppmscorlib">
-      <HintPath>..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+      <HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Gwent\MelonLoader\net6\MelonLoader.dll</HintPath>
+      <HintPath>$(GwentRoot)\MelonLoader\net6\MelonLoader.dll</HintPath>
     </Reference>
   </ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\GOG Galaxy\Games\Gwent\Mods&quot;" />
+		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(GwentRoot)\Mods&quot;" />
 	</Target>
 </Project>
