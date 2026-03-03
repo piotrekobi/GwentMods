@@ -4,11 +4,11 @@ using Il2CppGwentUnity;
 using MelonLoader;
 using System.Text.RegularExpressions;
 
-[assembly: MelonInfo(typeof(Boardify.BoardifyCore), "Boardify", "1.0.0", "Jester")]
+[assembly: MelonInfo(typeof(Boardify.Boardify), "Boardify", "1.0.0", "Jester")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 namespace Boardify
 {
-    public class BoardifyCore : MelonMod
+    public class Boardify : MelonMod
     {
         internal static MelonPreferences_Entry<string> boardPreference = null!;
         private static string? pendingBoard;
@@ -66,8 +66,8 @@ namespace Boardify
                 if (definition == null)
                     return;
 
-                MelonLogger.Msg("Current board preference: " + BoardifyCore.boardPreference.Value);
-                int desiredBoard = (int)Enum.Parse(typeof(BoardId), BoardifyCore.boardPreference.Value);
+                MelonLogger.Msg("Current board preference: " + Boardify.boardPreference.Value);
+                int desiredBoard = (int)Enum.Parse(typeof(BoardId), Boardify.boardPreference.Value);
                 if (definition.ArtId != desiredBoard)
                 {
                     definition.ArtId = desiredBoard;
