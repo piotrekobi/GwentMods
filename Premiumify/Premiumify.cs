@@ -75,20 +75,18 @@ namespace Premiumify
 
         private static void RegisterPremiumifyTranslations()
         {
-            var settingTranslations = new Dictionary<string, string>() {
+            ModSettings.ModSettings.RegisterTranslationKey(ModId, PremiumifySettingLocKey, new Dictionary<string, string>() {
                 { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" },
-                { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }};
-            ModSettings.ModSettings.RegisterTranslationKey(ModId, PremiumifySettingLocKey, settingTranslations);
+                { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }});
 
-            var enabledTranslations = new Dictionary<string, string>() {
+            ModSettings.ModSettings.RegisterTranslationKey(ModId, EnabledLocKey, new Dictionary<string, string>() {
                 { "en-us", "ENABLED" }, { "pl-pl", "WŁĄCZONE" }, { "de-de", "AKTIVIERT" }, { "ru-ru", "ВКЛЮЧЕНО" }, { "fr-fr", "ACTIVÉ" }, { "it-it", "ABILITATO" }, { "es-es", "ACTIVADO" },
-                { "es-mx", "ACTIVADO" }, { "pt-br", "ATIVADO" }, { "zh-cn", "已启用" }, { "ja-jp", "有効" }, { "ko-kr", "활성화됨" }};
-            ModSettings.ModSettings.RegisterTranslationKey(ModId, EnabledLocKey, enabledTranslations);
+                { "es-mx", "ACTIVADO" }, { "pt-br", "ATIVADO" }, { "zh-cn", "已启用" }, { "ja-jp", "有効" }, { "ko-kr", "활성화됨" }});
 
-            var disabledTranslations = new Dictionary<string, string>() {
+            ModSettings.ModSettings.RegisterTranslationKey(ModId, DisabledLocKey, new Dictionary<string, string>() {
                 { "en-us", "DISABLED" }, { "pl-pl", "WYŁĄCZONE" }, { "de-de", "DEAKTIVIERT" }, { "ru-ru", "ОТКЛЮЧЕНО" }, { "fr-fr", "DÉSACTIVÉ" }, { "it-it", "DISABILITATO" }, { "es-es", "DESACTIVADO" },
-                { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }};
-            ModSettings.ModSettings.RegisterTranslationKey(ModId, DisabledLocKey, disabledTranslations);
+                { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }});
+            
             Log("Translations Registered");
         }
 

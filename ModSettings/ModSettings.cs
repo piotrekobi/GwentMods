@@ -59,11 +59,9 @@ namespace ModSettings
             staticLogger = LoggerInstance; Log("OnInitializeMelon");
             try { HarmonyInstance.PatchAll(typeof(ModSettings).Assembly); Log("Harmony Patched."); }
             catch (Exception e) { LogError("Harmony PatchAll Error", e); }
-            var modCategoryTranslations = new Dictionary<string, string>() {
+            RegisterTranslationKey("ModSettings", ModCategoryLocalizationKey, new Dictionary<string, string>() {
                 { "en-us", "MODS" }, { "pl-pl", "MODY" }, { "de-de", "MODS" }, { "ru-ru", "МОДЫ" }, { "fr-fr", "MODS" }, { "it-it", "MODS" },
-                { "es-es", "MODS" }, { "es-mx", "MODS" }, { "pt-br", "MODS" }, { "zh-cn", "模组" }, { "ja-jp", "モジュール" }, { "ko-kr", "모드" }
-            };
-            RegisterTranslationKey("ModSettings", ModCategoryLocalizationKey, modCategoryTranslations);
+                { "es-es", "MODS" }, { "es-mx", "MODS" }, { "pt-br", "MODS" }, { "zh-cn", "模组" }, { "ja-jp", "モジュール" }, { "ko-kr", "모드" }});
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
