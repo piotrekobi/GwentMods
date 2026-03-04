@@ -1,18 +1,15 @@
-using System;
-using System.IO;
-using System.Collections;
-using System.Collections.Generic;
-using MelonLoader;
 using HarmonyLib;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using Il2CppGwentGameplay;
 using Il2CppGwentGameplay.Audio;
 using Il2CppGwentUnity;
 using Il2CppGwentUnity.Audio;
 using Il2CppGwentVisuals;
+using MelonLoader;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(CustomPremiums.CustomPremiumsCore), "CustomPremiums", "5.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(CustomPremiums.CustomPremiums), "CustomPremiums", "5.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace CustomPremiums
@@ -30,7 +27,7 @@ namespace CustomPremiums
     ///   HOOK 5: CardAppearanceRequest.OnAppearanceObjectLoaded
     ///           -> swap texture with custom art, fix broken shaders
     /// </summary>
-    public class CustomPremiumsCore : MelonMod
+    public class CustomPremiums : MelonMod
     {
         internal static MelonLogger.Instance Logger;
 
@@ -73,7 +70,7 @@ namespace CustomPremiums
 
             try
             {
-                HarmonyInstance.PatchAll(typeof(CustomPremiumsCore).Assembly);
+                HarmonyInstance.PatchAll(typeof(CustomPremiums).Assembly);
                 Logger.Msg("All Harmony patches applied!");
             }
             catch (Exception e)
@@ -82,7 +79,7 @@ namespace CustomPremiums
             }
         }
 
-        private void ScanFiles()
+        private static void ScanFiles()
         {
             string modDir = Path.Combine(GameDir, "Mods", "CustomPremiums");
             string bundlesPath = Path.Combine(modDir, "Bundles");
@@ -232,7 +229,7 @@ namespace CustomPremiums
         // =====================================================================
         // HOOK 1: Force IsPremium = true
         // =====================================================================
-        [HarmonyPatch(typeof(Il2CppGwentGameplay.Card), "SetDefinition")]
+        [HarmonyPatch(typeof(Card), "SetDefinition")]
         public static class Hook1_SetDefinition
         {
             static void Prefix(ref CardDefinition newDefinition)
@@ -249,7 +246,7 @@ namespace CustomPremiums
         // =====================================================================
         // HOOK 2: Bypass IsPremiumDisabled (proven struct patch)
         // =====================================================================
-        [HarmonyPatch(typeof(Il2CppGwentGameplay.CardDefinition), "IsPremiumDisabled")]
+        [HarmonyPatch(typeof(CardDefinition), "IsPremiumDisabled")]
         public static class Hook2_IsPremiumDisabled
         {
             static bool Prefix(ref CardDefinition __instance, ref bool __result)
@@ -387,7 +384,7 @@ namespace CustomPremiums
                     // Find the loaded scene
                     string scenePath = request.m_AssetPath;
                     Scene scene = SceneManager.GetSceneByPath(scenePath);
-                    
+
                     Logger.Msg($"[HOOK 4] GetSceneByPath('{scenePath}'): valid={scene.IsValid()}, name='{scene.name}', rootCount={scene.rootCount}");
 
                     if (!scene.IsValid() || scene.rootCount == 0)
@@ -485,7 +482,7 @@ namespace CustomPremiums
                     if (!LoadedTextures.ContainsKey(artId))
                     {
                         byte[] fileData = File.ReadAllBytes(texPath);
-                        Texture2D tex = new Texture2D(2, 2);
+                        Texture2D tex = new(2, 2);
                         ImageConversion.LoadImage(tex, fileData);
                         LoadedTextures[artId] = tex;
                         Logger.Msg($"[HOOK 5] Loaded texture from disk ({fileData.Length} bytes)");
@@ -513,11 +510,11 @@ namespace CustomPremiums
 
                     // Generic fallback: if any material still has InternalErrorShader after
                     // the build-time patcher ran, try to fix it with a working shader at runtime.
-                    string[] fallbackNames = {
+                    string[] fallbackNames = [
                         "ShaderLibrary/Generic/GwentStandard",
                         "GwentStandard",
                         "VFX/Common/AlphaBlended",
-                    };
+                    ];
                     Shader fallbackShader = null;
                     foreach (var name in fallbackNames)
                     {
@@ -550,7 +547,7 @@ namespace CustomPremiums
 
                     var customTex = LoadedTextures[artId];
                     var matHandler = appearanceObject.GetComponentInChildren<PremiumCardsMeshMaterialHandler>(true);
-                    
+
                     if (matHandler?.PremiumTextureAssigments != null)
                     {
                         foreach (var assignment in matHandler.PremiumTextureAssigments)
@@ -590,8 +587,7 @@ namespace CustomPremiums
         // GenerateVoiceover which has real logic (not inlined by Il2Cpp, unlike
         // the Card overload which is a one-liner wrapper).
         // =====================================================================
-        [HarmonyPatch(typeof(VoiceDuplicateFilter), "GenerateVoiceover",
-            new Type[] { typeof(int), typeof(ECardAudioTriggerType) })]
+        [HarmonyPatch(typeof(VoiceDuplicateFilter), "GenerateVoiceover", [typeof(int), typeof(ECardAudioTriggerType)])]
         public static class Hook6_VoicelineRedirect
         {
             static void Prefix(ref int cardAudioId)

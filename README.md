@@ -21,11 +21,14 @@ A collection of [MelonLoader](https://github.com/LavaGang/MelonLoader) mods for 
 
 ### Project References
 
-All `.csproj` files reference assemblies from the local MelonLoader installation. You'll need to update the `<HintPath>` entries if your Gwent installation is in a different location:
+All `.csproj` files reference assemblies from the local MelonLoader installation. You'll need to add Directory.Build.props file to root folder with such content:
 ```
-{GameDir}\MelonLoader\
-├── net6\                  # MelonLoader.dll, 0Harmony.dll, Il2CppInterop.Runtime.dll
-└── Il2CppAssemblies\      # Il2Cpp-generated game assemblies
+<Project>
+  <PropertyGroup>
+    <-- Your Gwent path here -->
+    <GwentRoot>C:\Program Files (x86)\GOG Galaxy\Games\Gwent</GwentRoot>
+  </PropertyGroup>
+</Project>
 ```
 
 Built DLLs are automatically copied to `{GameDir}\Mods\` via PostBuild targets in each `.csproj`.
@@ -143,7 +146,6 @@ Create a `MelonPreferences` category and entries for your settings. These persis
 public class MyMod : MelonMod
 {
     // Preference storage
-    static MelonPreferences_Category _category;
     static MelonPreferences_Entry<string> _difficultyPref;
 
     // Pending value (tracks unsaved UI changes)
@@ -152,8 +154,7 @@ public class MyMod : MelonMod
     public override void OnInitializeMelon()
     {
         // Create preferences (saved to UserData/MelonPreferences.cfg)
-        _category = MelonPreferences.CreateCategory("MyMod");
-        _difficultyPref = _category.CreateEntry("Difficulty", "normal");
+        _difficultyPref = MelonPreferences.CreateCategory("MyMod").CreateEntry("Difficulty", "normal");
         // _difficultyPref.Value is now "normal" on first run,
         // or whatever the user last saved
 
@@ -197,9 +198,9 @@ void RegisterSettings()
     // Define options: List of (id, localization key getter)
     var options = new List<Tuple<string, Func<string>>>
     {
-        Tuple.Create("easy",   (Func<string>)(() => "mymod_diff_easy")),
-        Tuple.Create("normal", (Func<string>)(() => "mymod_diff_normal")),
-        Tuple.Create("hard",   (Func<string>)(() => "mymod_diff_hard")),
+        Tuple.Create("easy",   () => "mymod_diff_easy"),
+        Tuple.Create("normal", () => "mymod_diff_normal"),
+        Tuple.Create("hard",   () => "mymod_diff_hard"),
     };
 
     ModSettings.ModSettings.RegisterSwitcherSetting(

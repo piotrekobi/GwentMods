@@ -1,12 +1,12 @@
 ﻿using MelonLoader;
 using System.Diagnostics;
 
-[assembly: MelonInfo(typeof(ModSettingsTest.ModSettingsTestCore), "ModSettingsTest", "1.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(ModSettingsTest.ModSettingsTest), "ModSettingsTest", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace ModSettingsTest
 {
-    public class ModSettingsTestCore : MelonMod
+    public class ModSettingsTest : MelonMod
     {
         private static MelonLogger.Instance staticLogger;
 
@@ -84,30 +84,30 @@ namespace ModSettingsTest
 
             var switcher1Options = new List<Tuple<string, Func<string>>>
             {
-                Tuple.Create("s1_opt1", (Func<string>)(() => S1Opt1LocKey)),
-                Tuple.Create("s1_opt2", (Func<string>)(() => S1Opt2LocKey)),
-                Tuple.Create("s1_opt3", (Func<string>)(() => S1Opt3LocKey))
+                Tuple.Create("s1_opt1", () => S1Opt1LocKey),
+                Tuple.Create("s1_opt2", () => S1Opt2LocKey),
+                Tuple.Create("s1_opt3", () => S1Opt3LocKey)
             };
             ModSettings.ModSettings.RegisterSwitcherSetting(ModId, Switcher1SettingKey, Switcher1LocKey, switcher1Options,
                 GetCurrentSwitcher1Value, OnSwitcher1ChangedInUI, HasPendingSwitcher1Changes, ApplyPendingSwitcher1Changes, RevertPendingSwitcher1Changes);
 
-            var switcher2Options = new List<System.Tuple<string, Func<string>>>
+            var switcher2Options = new List<Tuple<string, Func<string>>>
             {
-                Tuple.Create("s2_opt1", (Func<string>)(() => S2Opt1LocKey)),
-                Tuple.Create("s2_opt2", (Func<string>)(() => S2Opt2LocKey)),
-                Tuple.Create("s2_opt3", (Func<string>)(() => S2Opt3LocKey)),
-                Tuple.Create("s2_opt4", (Func<string>)(() => S2Opt4LocKey))
+                Tuple.Create("s2_opt1", () => S2Opt1LocKey),
+                Tuple.Create("s2_opt2", () => S2Opt2LocKey),
+                Tuple.Create("s2_opt3", () => S2Opt3LocKey),
+                Tuple.Create("s2_opt4", () => S2Opt4LocKey)
             };
             ModSettings.ModSettings.RegisterSwitcherSetting(ModId, Switcher2SettingKey, Switcher2LocKey, switcher2Options,
                 GetCurrentSwitcher2Value, OnSwitcher2ChangedInUI, HasPendingSwitcher2Changes, ApplyPendingSwitcher2Changes, RevertPendingSwitcher2Changes);
 
-            var switcher3Options = new List<System.Tuple<string, Func<string>>>
+            var switcher3Options = new List<Tuple<string, Func<string>>>
             {
-                Tuple.Create("s3_opt1", (Func<string>)(() => S3Opt1LocKey)),
-                Tuple.Create("s3_opt2", (Func<string>)(() => S3Opt2LocKey)),
-                Tuple.Create("s3_opt3", (Func<string>)(() => S3Opt3LocKey)),
-                Tuple.Create("s3_opt4", (Func<string>)(() => S3Opt4LocKey)),
-                Tuple.Create("s3_opt5", (Func<string>)(() => S3Opt5LocKey))
+                Tuple.Create("s3_opt1", () => S3Opt1LocKey),
+                Tuple.Create("s3_opt2", () => S3Opt2LocKey),
+                Tuple.Create("s3_opt3", () => S3Opt3LocKey),
+                Tuple.Create("s3_opt4", () => S3Opt4LocKey),
+                Tuple.Create("s3_opt5", () => S3Opt5LocKey)
             };
             ModSettings.ModSettings.RegisterSwitcherSetting(ModId, Switcher3SettingKey, Switcher3LocKey, switcher3Options,
                 GetCurrentSwitcher3Value, OnSwitcher3ChangedInUI, HasPendingSwitcher3Changes, ApplyPendingSwitcher3Changes, RevertPendingSwitcher3Changes);
@@ -117,8 +117,8 @@ namespace ModSettingsTest
                 int local_i = i;
                 var additionalSwitcherOptions = new List<Tuple<string, Func<string>>>
                 {
-                    Tuple.Create($"add_s{local_i + 1}_opt_a", (Func<string>)(() => AdditionalOptALocKey)),
-                    Tuple.Create($"add_s{local_i + 1}_opt_b", (Func<string>)(() => AdditionalOptBLocKey))
+                    Tuple.Create($"add_s{local_i + 1}_opt_a", () => AdditionalOptALocKey),
+                    Tuple.Create($"add_s{local_i + 1}_opt_b", () => AdditionalOptBLocKey)
                 };
 
                 ModSettings.ModSettings.RegisterSwitcherSetting(ModId,

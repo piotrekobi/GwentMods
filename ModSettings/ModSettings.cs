@@ -1,13 +1,13 @@
-﻿using System.Collections;
-using MelonLoader;
-using UnityEngine;
-using HarmonyLib;
-using Il2CppGwentUnity;
-using UnityEngine.UI;
+﻿using HarmonyLib;
 using Il2CppCrimsonUI;
-using Il2CppTMPro;
+using Il2CppGwentUnity;
 using Il2CppLocalization;
+using Il2CppTMPro;
+using MelonLoader;
+using System.Collections;
 using System.Diagnostics;
+using UnityEngine;
+using UnityEngine.UI;
 
 [assembly: MelonInfo(typeof(ModSettings.ModSettings), "ModSettings", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -44,7 +44,7 @@ namespace ModSettings
         {
             public string ModId; public string SettingKey; public string DisplayNameKey; public SettingType Type;
             public Func<object> GetCurrentValue; public Action<object> OnValueChanged;
-            public List<System.Tuple<string, Func<string>>> SwitcherOptions;
+            public List<Tuple<string, Func<string>>> SwitcherOptions;
             public UISettingsEntry UIEntry; public Switcher UISwitcher;
         }
 
@@ -59,11 +59,9 @@ namespace ModSettings
             staticLogger = LoggerInstance; Log("OnInitializeMelon");
             try { HarmonyInstance.PatchAll(typeof(ModSettings).Assembly); Log("Harmony Patched."); }
             catch (Exception e) { LogError("Harmony PatchAll Error", e); }
-            var modCategoryTranslations = new Dictionary<string, string>() {
+            RegisterTranslationKey("ModSettings", ModCategoryLocalizationKey, new Dictionary<string, string>() {
                 { "en-us", "MODS" }, { "pl-pl", "MODY" }, { "de-de", "MODS" }, { "ru-ru", "МОДЫ" }, { "fr-fr", "MODS" }, { "it-it", "MODS" },
-                { "es-es", "MODS" }, { "es-mx", "MODS" }, { "pt-br", "MODS" }, { "zh-cn", "模组" }, { "ja-jp", "モジュール" }, { "ko-kr", "모드" }
-            };
-            RegisterTranslationKey("ModSettings", ModCategoryLocalizationKey, modCategoryTranslations);
+                { "es-es", "MODS" }, { "es-mx", "MODS" }, { "pt-br", "MODS" }, { "zh-cn", "模组" }, { "ja-jp", "モジュール" }, { "ko-kr", "모드" }});
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -110,7 +108,7 @@ namespace ModSettings
         }
 
         public static void RegisterSwitcherSetting(string modId, string settingKey, string displayNameKey,
-            List<System.Tuple<string, Func<string>>> switcherOptions,
+            List<Tuple<string, Func<string>>> switcherOptions,
             Func<object> getCurrentValue, Action<object> onValueChangedCallback,
             Func<bool> hasPendingChangesCallback, Action applyPendingChangesCallback, Action revertPendingChangesCallback)
         {
@@ -136,7 +134,7 @@ namespace ModSettings
             static void Postfix(UISettingsPanel __instance)
             {
                 Log("HandleShowing Postfix"); if (__instance == null) { LogError("HandleShowing: __instance NULL!"); return; }
-                ModSettings.InjectAllModTranslations();
+                InjectAllModTranslations();
                 try
                 {
                     _panelInstanceForListener = __instance; FindAndCacheSubmitButton(__instance);
@@ -167,8 +165,8 @@ namespace ModSettings
                 if (templateEntryGO == null) { LogError("InitializeModUIFramework: Template Entry GO Null."); return; }
                 try
                 {
-                    if (_modCategoryContainerGO != null) GameObject.Destroy(_modCategoryContainerGO);
-                    _modCategoryContainerGO = GameObject.Instantiate(templateCatGO, cats); if (_modCategoryContainerGO == null) throw new Exception("Instantiate mod category container failed.");
+                    if (_modCategoryContainerGO != null) UnityEngine.Object.Destroy(_modCategoryContainerGO);
+                    _modCategoryContainerGO = UnityEngine.Object.Instantiate(templateCatGO, cats) ?? throw new Exception("Instantiate mod category container failed.");
                     _modCategoryContainerGO.name = ModCategoryContainerName;
                     if (_modCategoryContainerGO.GetComponent<UIGeneralSettingsCategory>() is Behaviour b1) b1.enabled = false; if (_modCategoryContainerGO.GetComponent<UISettingsCategory>() is Behaviour b2) b2.enabled = false;
                     var cg = _modCategoryContainerGO.GetComponent<CanvasGroup>() ?? _modCategoryContainerGO.AddComponent<CanvasGroup>(); cg.interactable = true; cg.blocksRaycasts = true; cg.alpha = 1f; SetLayerRecursively(_modCategoryContainerGO, 5);
@@ -214,7 +212,7 @@ namespace ModSettings
                     }
 
                     Transform scrollT = FindDeepChild(_modCategoryContainerGO.transform, "ScrollView"); Transform contentT = FindDeepChild(scrollT, "PatternHolderFolder") ?? FindDeepChild(scrollT, "Content");
-                    if (contentT != null) for (int i = contentT.childCount - 1; i >= 0; i--) GameObject.Destroy(contentT.GetChild(i).gameObject); else { LogError("InitializeModUIFramework: Content/PatternHolderFolder Null."); return; }
+                    if (contentT != null) for (int i = contentT.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(contentT.GetChild(i).gameObject); else { LogError("InitializeModUIFramework: Content/PatternHolderFolder Null."); return; }
                     _modCategoryContainerGO.SetActive(false); _modUIInitialized = true; if (_configCoroutineHandle != null) MelonCoroutines.Stop(_configCoroutineHandle);
                     _configCoroutineHandle = MelonCoroutines.Start(PopulateModSettingsCoroutine(templateEntryGO, iPanel, contentT)); Log("Mod UI Framework Initialized, starting population coroutine.");
                 }
@@ -231,7 +229,7 @@ namespace ModSettings
                     var setting = RegisteredSettings[i]; GameObject entryInstance = null;
                     try
                     {
-                        entryInstance = GameObject.Instantiate(entryPrefab, contentParent); if (entryInstance == null) throw new Exception($"Instantiate entry for {setting.ModId}_{setting.SettingKey} failed.");
+                        entryInstance = UnityEngine.Object.Instantiate(entryPrefab, contentParent) ?? throw new Exception($"Instantiate entry for {setting.ModId}_{setting.SettingKey} failed.");
                         entryInstance.name = $"{setting.ModId}_{setting.SettingKey}_Entry"; entryInstance.SetActive(true); SetLayerRecursively(entryInstance, 5);
                         var uiSettingsEntry = entryInstance.GetComponent<UISettingsEntry>() ?? throw new Exception("Missing UISettingsEntry component.");
                         if (entryInstance.GetComponent<AControl>() is AControl entryCtrl && innerPanel.GetComponent<AContainer>() is AContainer panelAContainer && entryCtrl.Parent != panelAContainer) panelAContainer.AddChild(entryCtrl);
@@ -239,24 +237,21 @@ namespace ModSettings
                         if (!switcher.gameObject.activeSelf) switcher.gameObject.SetActive(true);
                         foreach (var lbl in entryInstance.GetComponentsInChildren<TextMeshProUGUI>(true)) if (lbl != null && !lbl.transform.IsChildOf(switcher.transform)) { titleLbl = lbl; locComp = titleLbl.GetComponent<LocalizedTextMeshPro>(); break; }
                         if (titleLbl != null) { if (locComp != null) locComp.enabled = false; titleLbl.text = LocalizationManager.Instance?.TryGetTranslationText(setting.DisplayNameKey) ?? setting.DisplayNameKey; } else LogWarning($"No title label for {setting.SettingKey}");
-
+                        
                         var localSetting = setting; int localIndex = i;
                         switcher.ClearItems();
                         if (localSetting.SwitcherOptions != null)
                         {
                             foreach (var option in localSetting.SwitcherOptions)
                             {
-                                var key = option.Item2();
-                                var translated = AllModTranslations.TryGetValue(LocalizationManager.Instance?.CurrentLanguage ?? "en-us", out var langDict) && langDict.TryGetValue(key, out var val)
-                                                     ? val // Use the translation if available, otherwise show key
-                                                     : key; 
-                                switcher.AddItem(option.Item1, translated, false);
+                                switcher.AddItem(option.Item1, option.Item2(), true);
                             }
                         }
 
                         switcher.OnArrowClicked?.RemoveAllListeners(); switcher.OnArrowClicked?.AddListener((Il2CppSystem.Action)(() => { }));
                         switcher.OnValueChanged?.RemoveAllListeners();
-                        switcher.OnValueChanged?.AddListener((Il2CppSystem.Action<Switcher>)((Switcher s) => {
+                        switcher.OnValueChanged?.AddListener((Il2CppSystem.Action<Switcher>)(s =>
+                        {
                             if (s?.Value == null) return;
                             localSetting.OnValueChanged(s.Value.Id);
                             UpdateSubmitButtonState();
@@ -294,7 +289,7 @@ namespace ModSettings
 
                         var updatedSetting = RegisteredSettings[localIndex]; updatedSetting.UIEntry = uiSettingsEntry; updatedSetting.UISwitcher = switcher; RegisteredSettings[localIndex] = updatedSetting; Log($"Configured UI: {localSetting.ModId} - {localSetting.SettingKey}");
                     }
-                    catch (Exception ex) { LogError($"Error setting up UI for {setting.ModId}_{setting.SettingKey}: {ex.Message}", ex); if (entryInstance != null) GameObject.Destroy(entryInstance); }
+                    catch (Exception ex) { LogError($"Error setting up UI for {setting.ModId}_{setting.SettingKey}: {ex.Message}", ex); if (entryInstance != null) UnityEngine.Object.Destroy(entryInstance); }
                 }
                 var catPlace = _modCategoryContainerGO?.transform?.parent; var catRect = _modCategoryContainerGO?.GetComponent<RectTransform>(); var contRect = contentParent?.GetComponent<RectTransform>();
                 if (contRect != null) LayoutRebuilder.ForceRebuildLayoutImmediate(contRect); if (catRect != null) LayoutRebuilder.ForceRebuildLayoutImmediate(catRect); if (catPlace?.GetComponent<RectTransform>() is RectTransform cpRect) LayoutRebuilder.ForceRebuildLayoutImmediate(cpRect);
@@ -334,12 +329,12 @@ namespace ModSettings
 
             static void EnsureListenerAttached(ToggleButtonControl btnCtrl)
             {
-                if (btnCtrl == null) return; if (ModSettings._addedModsButton == null && btnCtrl.name == ModsButtonName) ModSettings._addedModsButton = btnCtrl;
+                if (btnCtrl == null) return; if (_addedModsButton == null && btnCtrl.name == ModsButtonName) _addedModsButton = btnCtrl;
                 try
                 {
                     var onToggle = btnCtrl.OnToggle; if (onToggle == null) return;
-                    ModSettings._persistentToggleListener ??= (ToggleButtonControl tBtn) => { if (tBtn != null) HandleModButtonState(tBtn.GetInstanceID() == ModSettings._addedModsButton?.GetInstanceID() && tBtn.IsToggled); };
-                    onToggle.RemoveListener(ModSettings._persistentToggleListener); onToggle.AddListener(ModSettings._persistentToggleListener);
+                    _persistentToggleListener ??= tBtn => { if (tBtn != null) HandleModButtonState(tBtn.GetInstanceID() == _addedModsButton?.GetInstanceID() && tBtn.IsToggled); };
+                    onToggle.RemoveListener(_persistentToggleListener); onToggle.AddListener(_persistentToggleListener);
                 }
                 catch (Exception e) { LogError($"EnsureListenerAttached Error: {e}"); }
             }
@@ -371,8 +366,8 @@ namespace ModSettings
         private static void CleanupModSettingsUI()
         {
             if (_configCoroutineHandle != null) { MelonCoroutines.Stop(_configCoroutineHandle); _configCoroutineHandle = null; }
-            for (int i = 0; i < RegisteredSettings.Count; i++) { var s = RegisteredSettings[i]; if (s.UIEntry?.gameObject != null) GameObject.Destroy(s.UIEntry.gameObject); s.UIEntry = null; s.UISwitcher = null; RegisteredSettings[i] = s; }
-            if (_modCategoryContainerGO != null) { GameObject.Destroy(_modCategoryContainerGO); _modCategoryContainerGO = null; }
+            for (int i = 0; i < RegisteredSettings.Count; i++) { var s = RegisteredSettings[i]; if (s.UIEntry?.gameObject != null) UnityEngine.Object.Destroy(s.UIEntry.gameObject); s.UIEntry = null; s.UISwitcher = null; RegisteredSettings[i] = s; }
+            if (_modCategoryContainerGO != null) { UnityEngine.Object.Destroy(_modCategoryContainerGO); _modCategoryContainerGO = null; }
             _modUIInitialized = false; Log("Mod Settings UI Cleaned Up.");
         }
 
@@ -381,11 +376,11 @@ namespace ModSettings
             var iPanel = _panelInstanceForListener?.m_SettingsInnerPanel; if (iPanel == null) return; var catsPlacement = iPanel.m_CategoriesPlacement;
             var iPanelCG = iPanel.GetComponent<CanvasGroup>() ?? iPanel.gameObject.AddComponent<CanvasGroup>(); iPanelCG.interactable = true; iPanelCG.blocksRaycasts = true; iPanelCG.alpha = 1f;
             if (catsPlacement != null) for (int i = 0; i < catsPlacement.childCount; i++)
-                {
-                    var child = catsPlacement.GetChild(i); if (child == null) continue;
-                    bool isOurModContainer = _modCategoryContainerGO != null && child.gameObject.GetInstanceID() == _modCategoryContainerGO.GetInstanceID();
-                    if (!isOurModContainer && child.gameObject.activeSelf) child.gameObject.SetActive(false); else if (isOurModContainer && !child.gameObject.activeSelf) child.gameObject.SetActive(true);
-                }
+            {
+                var child = catsPlacement.GetChild(i); if (child == null) continue;
+                bool isOurModContainer = _modCategoryContainerGO != null && child.gameObject.GetInstanceID() == _modCategoryContainerGO.GetInstanceID();
+                if (!isOurModContainer && child.gameObject.activeSelf) child.gameObject.SetActive(false); else if (isOurModContainer && !child.gameObject.activeSelf) child.gameObject.SetActive(true);
+            }
         }
 
         private static void ShowOriginalCategory(SettingsCategory catToShow)
@@ -398,10 +393,10 @@ namespace ModSettings
             {
                 LogError($"ShowCategory for {catToShow} failed. Fallback...", ex); var catsPlacement = iPanel.m_CategoriesPlacement;
                 if (catsPlacement != null) for (int i = 0; i < catsPlacement.childCount; i++)
-                    {
-                        var child = catsPlacement.GetChild(i); if (child == null) continue;
-                        bool shouldBeActive = child.name.Equals(catToShow.ToString(), StringComparison.OrdinalIgnoreCase); if (child.gameObject.activeSelf != shouldBeActive) child.gameObject.SetActive(shouldBeActive);
-                    }
+                {
+                    var child = catsPlacement.GetChild(i); if (child == null) continue;
+                    bool shouldBeActive = child.name.Equals(catToShow.ToString(), StringComparison.OrdinalIgnoreCase); if (child.gameObject.activeSelf != shouldBeActive) child.gameObject.SetActive(shouldBeActive);
+                }
             }
         }
 
@@ -417,7 +412,7 @@ namespace ModSettings
             static bool Prefix(AControl control)
             {
                 Log($"OnCategoryButtonToggled Prefix: Control '{control?.name ?? "NULL"}'");
-                try { if (ModSettings._addedModsButton != null && control?.GetInstanceID() == ModSettings._addedModsButton.GetInstanceID()) return false; if (_modCategoryContainerGO?.activeSelf == true) { _modCategoryContainerGO.SetActive(false); Log("Hiding MODS container."); } return true; }
+                try { if (_addedModsButton != null && control?.GetInstanceID() == _addedModsButton.GetInstanceID()) return false; if (_modCategoryContainerGO?.activeSelf == true) { _modCategoryContainerGO.SetActive(false); Log("Hiding MODS container."); } return true; }
                 catch (Exception ex) { LogError("OnCategoryButtonToggled Prefix Error", ex); if (_modCategoryContainerGO?.activeSelf == true) _modCategoryContainerGO.SetActive(false); return true; }
             }
         }
