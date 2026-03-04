@@ -42,7 +42,7 @@ public class ModSettings : MelonMod
 
     private struct RegisteredModSetting
     {
-        public string ModId; public string SettingKey; public string DisplayNameKey; public SettingType Type;
+        public string ModId; public string UniqueSettingId; public string DisplayNameKey; public SettingType Type;
         public Func<object> GetCurrentValue; public Action<object> OnValueChanged;
         public List<Tuple<string, Func<string>>> SwitcherOptions;
         public UISettingsEntry UIEntry; public Switcher UISwitcher;
@@ -107,25 +107,25 @@ public class ModSettings : MelonMod
         Log($"Successfully registered translations for key '{key}' from mod '{modId}' for all required languages.");
     }
 
-    public static void RegisterSwitcherSetting(string modId, string settingKey, string displayNameKey,
+    public static void RegisterSwitcherSetting(string modId, string uniqueSettingId, string displayTranslationKey,
         List<Tuple<string, Func<string>>> switcherOptions,
         Func<object> getCurrentValue, Action<object> onValueChangedCallback,
         Func<bool> hasPendingChangesCallback, Action applyPendingChangesCallback, Action revertPendingChangesCallback)
     {
-        if (RegisteredSettings.Any(s => s.ModId == modId && s.SettingKey == settingKey)) { LogWarning($"Setting '{settingKey}' for mod '{modId}' already registered. Skipping."); return; }
+        if (RegisteredSettings.Any(s => s.ModId == modId && s.UniqueSettingId == uniqueSettingId)) { LogWarning($"Setting '{uniqueSettingId}' for mod '{modId}' already registered. Skipping."); return; }
         RegisteredSettings.Add(new RegisteredModSetting
         {
             ModId = modId,
-            SettingKey = settingKey,
-            DisplayNameKey = displayNameKey,
+            UniqueSettingId = uniqueSettingId,
+            DisplayNameKey = displayTranslationKey,
             Type = SettingType.Switcher,
             SwitcherOptions = switcherOptions,
             GetCurrentValue = getCurrentValue,
             OnValueChanged = onValueChangedCallback
         });
-        string combinedKey = modId + "_" + settingKey;
+        string combinedKey = modId + "_" + uniqueSettingId;
         ModHasPendingChangesCallbacks[combinedKey] = hasPendingChangesCallback; ModApplyPendingChangesCallbacks[combinedKey] = applyPendingChangesCallback; ModRevertPendingChangesCallbacks[combinedKey] = revertPendingChangesCallback;
-        Log($"Registered Switcher: Mod '{modId}', Key '{settingKey}'");
+        Log($"Registered Switcher: Mod '{modId}', Key '{uniqueSettingId}'");
     }
 
     [HarmonyPatch(typeof(UISettingsPanel), "HandleShowing")]
@@ -229,14 +229,14 @@ public class ModSettings : MelonMod
                 var setting = RegisteredSettings[i]; GameObject entryInstance = null;
                 try
                 {
-                    entryInstance = UnityEngine.Object.Instantiate(entryPrefab, contentParent) ?? throw new Exception($"Instantiate entry for {setting.ModId}_{setting.SettingKey} failed.");
-                    entryInstance.name = $"{setting.ModId}_{setting.SettingKey}_Entry"; entryInstance.SetActive(true); SetLayerRecursively(entryInstance, 5);
+                    entryInstance = UnityEngine.Object.Instantiate(entryPrefab, contentParent) ?? throw new Exception($"Instantiate entry for {setting.ModId}_{setting.UniqueSettingId} failed.");
+                    entryInstance.name = $"{setting.ModId}_{setting.UniqueSettingId}_Entry"; entryInstance.SetActive(true); SetLayerRecursively(entryInstance, 5);
                     var uiSettingsEntry = entryInstance.GetComponent<UISettingsEntry>() ?? throw new Exception("Missing UISettingsEntry component.");
                     if (entryInstance.GetComponent<AControl>() is AControl entryCtrl && innerPanel.GetComponent<AContainer>() is AContainer panelAContainer && entryCtrl.Parent != panelAContainer) panelAContainer.AddChild(entryCtrl);
                     TextMeshProUGUI titleLbl = null; LocalizedTextMeshPro locComp = null; Switcher switcher = entryInstance.GetComponentInChildren<Switcher>(true) ?? throw new Exception("Missing Switcher component.");
                     if (!switcher.gameObject.activeSelf) switcher.gameObject.SetActive(true);
                     foreach (var lbl in entryInstance.GetComponentsInChildren<TextMeshProUGUI>(true)) if (lbl != null && !lbl.transform.IsChildOf(switcher.transform)) { titleLbl = lbl; locComp = titleLbl.GetComponent<LocalizedTextMeshPro>(); break; }
-                    if (titleLbl != null) { if (locComp != null) locComp.enabled = false; titleLbl.text = LocalizationManager.Instance?.TryGetTranslationText(setting.DisplayNameKey) ?? setting.DisplayNameKey; } else LogWarning($"No title label for {setting.SettingKey}");
+                    if (titleLbl != null) { if (locComp != null) locComp.enabled = false; titleLbl.text = LocalizationManager.Instance?.TryGetTranslationText(setting.DisplayNameKey) ?? setting.DisplayNameKey; } else LogWarning($"No title label for {setting.UniqueSettingId}");
                     
                     var localSetting = setting; int localIndex = i;
                     switcher.ClearItems();
@@ -291,9 +291,9 @@ public class ModSettings : MelonMod
                         switcher.SelectItemById(localSetting.SwitcherOptions[0].Item1);
                     }
 
-                    var updatedSetting = RegisteredSettings[localIndex]; updatedSetting.UIEntry = uiSettingsEntry; updatedSetting.UISwitcher = switcher; RegisteredSettings[localIndex] = updatedSetting; Log($"Configured UI: {localSetting.ModId} - {localSetting.SettingKey}");
+                    var updatedSetting = RegisteredSettings[localIndex]; updatedSetting.UIEntry = uiSettingsEntry; updatedSetting.UISwitcher = switcher; RegisteredSettings[localIndex] = updatedSetting; Log($"Configured UI: {localSetting.ModId} - {localSetting.UniqueSettingId}");
                 }
-                catch (Exception ex) { LogError($"Error setting up UI for {setting.ModId}_{setting.SettingKey}: {ex.Message}", ex); if (entryInstance != null) UnityEngine.Object.Destroy(entryInstance); }
+                catch (Exception ex) { LogError($"Error setting up UI for {setting.ModId}_{setting.UniqueSettingId}: {ex.Message}", ex); if (entryInstance != null) UnityEngine.Object.Destroy(entryInstance); }
             }
             var catPlace = _modCategoryContainerGO?.transform?.parent; var catRect = _modCategoryContainerGO?.GetComponent<RectTransform>(); var contRect = contentParent?.GetComponent<RectTransform>();
             if (contRect != null) LayoutRebuilder.ForceRebuildLayoutImmediate(contRect); if (catRect != null) LayoutRebuilder.ForceRebuildLayoutImmediate(catRect); if (catPlace?.GetComponent<RectTransform>() is RectTransform cpRect) LayoutRebuilder.ForceRebuildLayoutImmediate(cpRect);
