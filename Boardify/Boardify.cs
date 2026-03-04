@@ -2,7 +2,6 @@
 using Il2CppGwentGameplay;
 using Il2CppGwentUnity;
 using MelonLoader;
-using System.Text.RegularExpressions;
 
 [assembly: MelonInfo(typeof(Boardify.Boardify), "Boardify", "1.0.0", "Jester")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -16,19 +15,19 @@ namespace Boardify
         public override void OnInitializeMelon()
         {
             boardPreference = MelonPreferences.CreateCategory("Boardify").CreateEntry("Boardify", BoardId.Yamurlak.ToString());
-            RegisterAllBoards();
+            RegisterAllBoards(new EmbeddedFileTranslationProvider("Boardify.BoardTranslations.json"));
             HarmonyInstance.PatchAll();
         }
 
-        private static void RegisterAllBoards()
+        private static void RegisterAllBoards(ITranslationProvider translationProvider)
         {
             var options = new List<Tuple<string, Func<string>>>();
 
             foreach (BoardId board in Enum.GetValues(typeof(BoardId)))
             {
-                string key = board.ToString();
-                ModSettings.ModSettings.RegisterTranslationKey("Boardify", key, CreateDummyTranslations(key));
-                options.Add(Tuple.Create(key, () => key));
+                string name = board.ToString();
+                ModSettings.ModSettings.RegisterTranslationKey("Boardify", name, translationProvider.GetTranslations(name));
+                options.Add(Tuple.Create(name, () => name));
             }
 
             // Register switcher once with all enum options
@@ -43,15 +42,6 @@ namespace Boardify
                 applyPendingChangesCallback: () => { if (pendingBoard != null) { boardPreference.Value = pendingBoard; pendingBoard = null; } }, // user clicked Save
                 revertPendingChangesCallback: () => pendingBoard = null // user clicked Back/Cancel
             );
-        }
-
-        private static Dictionary<string, string> CreateDummyTranslations(string baseText)
-        {
-            string readableText = Regex.Replace(baseText, "(?<!^)([A-Z])", " $1"); // Insert space before uppercase letters following lowercase letters
-            var dict = new Dictionary<string, string>();
-            foreach (var lang in new List<string> { "en-us", "pl-pl", "de-de", "ru-ru", "fr-fr", "it-it", "es-es", "es-mx", "pt-br", "zh-cn", "ja-jp", "ko-kr" }) 
-                dict[lang] = $"{readableText}"/*+"({lang.ToUpper()})"*/;
-            return dict;
         }
     }
 
