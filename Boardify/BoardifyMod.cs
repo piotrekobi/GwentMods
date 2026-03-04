@@ -43,7 +43,6 @@ public class BoardifyMod : MelonMod
 
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            uniqueSettingId: "BoardifyEnabled",
             displayTranslationKey: translationKey,
             switcherOptions: switcherOptions,
             getCurrentValue: () => isModEnabledPreference.Value.ToString(), // currently saved value
@@ -68,7 +67,6 @@ public class BoardifyMod : MelonMod
 
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            uniqueSettingId: "CurrentBoard",
             displayTranslationKey: translationKey,
             switcherOptions: switcherOptions,
             getCurrentValue: () => boardPreference.Value, // what's currently saved

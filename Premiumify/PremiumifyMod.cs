@@ -2,8 +2,8 @@
 using Il2CppGwentGameplay;
 using Il2CppGwentVisuals;
 using MelonLoader;
-using System.Diagnostics;
 using ModSettings;
+using System.Diagnostics;
 
 [assembly: MelonInfo(typeof(Premiumify.PremiumifyMod), "Premiumify", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -47,7 +47,7 @@ public class PremiumifyMod : MelonMod
             Tuple.Create("disabled", () => DisabledLocKey),
         };
 
-        ModSettingsMod.RegisterSwitcherSetting(ModId, PremiumifySettingKey, PremiumifySettingLocKey,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, PremiumifySettingLocKey,
             switcherOptions,
             GetCurrentEnablePremiumifyValue,
             OnPremiumifySettingChangedInUI,

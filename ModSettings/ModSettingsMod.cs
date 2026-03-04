@@ -108,11 +108,13 @@ public class ModSettingsMod : MelonMod
         Log($"Successfully registered translations for key '{key}' from mod '{modId}' for all required languages.");
     }
 
-    public static void RegisterSwitcherSetting(string modId, string uniqueSettingId, string displayTranslationKey,
+    public static void RegisterSwitcherSetting(string modId, string displayTranslationKey,
         List<Tuple<string, Func<string>>> switcherOptions,
         Func<object> getCurrentValue, Action<object> onValueChangedCallback,
         Func<bool> hasPendingChangesCallback, Action applyPendingChangesCallback, Action revertPendingChangesCallback)
     {
+        string uniqueSettingId = $"{modId}_{displayTranslationKey}";
+
         if (RegisteredSettings.Any(s => s.ModId == modId && s.UniqueSettingId == uniqueSettingId)) { LogWarning($"Setting '{uniqueSettingId}' for mod '{modId}' already registered. Skipping."); return; }
         RegisteredSettings.Add(new RegisteredModSetting
         {
@@ -238,7 +240,7 @@ public class ModSettingsMod : MelonMod
                     if (!switcher.gameObject.activeSelf) switcher.gameObject.SetActive(true);
                     foreach (var lbl in entryInstance.GetComponentsInChildren<TextMeshProUGUI>(true)) if (lbl != null && !lbl.transform.IsChildOf(switcher.transform)) { titleLbl = lbl; locComp = titleLbl.GetComponent<LocalizedTextMeshPro>(); break; }
                     if (titleLbl != null) { if (locComp != null) locComp.enabled = false; titleLbl.text = LocalizationManager.Instance?.TryGetTranslationText(setting.DisplayNameKey) ?? setting.DisplayNameKey; } else LogWarning($"No title label for {setting.UniqueSettingId}");
-                    
+
                     var localSetting = setting; int localIndex = i;
                     switcher.ClearItems();
                     if (localSetting.SwitcherOptions != null)

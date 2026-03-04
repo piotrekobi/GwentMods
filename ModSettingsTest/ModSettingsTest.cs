@@ -89,7 +89,7 @@ public class ModSettingsTest : MelonMod
             Tuple.Create("s1_opt2", () => S1Opt2LocKey),
             Tuple.Create("s1_opt3", () => S1Opt3LocKey)
         };
-        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher1SettingKey, Switcher1LocKey, switcher1Options,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher1LocKey, switcher1Options,
             GetCurrentSwitcher1Value, OnSwitcher1ChangedInUI, HasPendingSwitcher1Changes, ApplyPendingSwitcher1Changes, RevertPendingSwitcher1Changes);
 
         var switcher2Options = new List<Tuple<string, Func<string>>>
@@ -99,7 +99,7 @@ public class ModSettingsTest : MelonMod
             Tuple.Create("s2_opt3", () => S2Opt3LocKey),
             Tuple.Create("s2_opt4", () => S2Opt4LocKey)
         };
-        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher2SettingKey, Switcher2LocKey, switcher2Options,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher2LocKey, switcher2Options,
             GetCurrentSwitcher2Value, OnSwitcher2ChangedInUI, HasPendingSwitcher2Changes, ApplyPendingSwitcher2Changes, RevertPendingSwitcher2Changes);
 
         var switcher3Options = new List<Tuple<string, Func<string>>>
@@ -110,7 +110,7 @@ public class ModSettingsTest : MelonMod
             Tuple.Create("s3_opt4", () => S3Opt4LocKey),
             Tuple.Create("s3_opt5", () => S3Opt5LocKey)
         };
-        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher3SettingKey, Switcher3LocKey, switcher3Options,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher3LocKey, switcher3Options,
             GetCurrentSwitcher3Value, OnSwitcher3ChangedInUI, HasPendingSwitcher3Changes, ApplyPendingSwitcher3Changes, RevertPendingSwitcher3Changes);
 
         for (int i = 0; i < 10; i++)
@@ -123,7 +123,6 @@ public class ModSettingsTest : MelonMod
             };
 
             ModSettingsMod.RegisterSwitcherSetting(ModId,
-                additionalSwitcherSettingKeys[local_i],
                 additionalSwitcherLocKeys[local_i],
                 additionalSwitcherOptions,
                 () => GetCurrentAdditionalSwitcherValue(local_i),

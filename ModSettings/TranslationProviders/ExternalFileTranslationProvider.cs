@@ -1,7 +1,7 @@
-﻿using ModSettings;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 
+#nullable enable
 
 // uses external file in the same folder as DLL on the runtime
 namespace ModSettings.TranslationProviders;
