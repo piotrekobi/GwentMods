@@ -239,6 +239,9 @@ public class ModSettingsMod : MelonMod
                     if (entryInstance.GetComponent<AControl>() is AControl entryCtrl && innerPanel.GetComponent<AContainer>() is AContainer panelAContainer && entryCtrl.Parent != panelAContainer) panelAContainer.AddChild(entryCtrl);
                     TextMeshProUGUI titleLbl = null; LocalizedTextMeshPro locComp = null; Switcher switcher = entryInstance.GetComponentInChildren<Switcher>(true) ?? throw new Exception("Missing Switcher component.");
                     if (!switcher.gameObject.activeSelf) switcher.gameObject.SetActive(true);
+                    if (switcher.m_label != null)
+                        foreach (var label in switcher.m_label)
+                            if (label?.m_Text != null) { float def = label.m_Text.fontSize; label.m_Text.enableAutoSizing = true; label.m_Text.fontSizeMax = def; label.m_Text.fontSizeMin = 10f; }
                     foreach (var lbl in entryInstance.GetComponentsInChildren<TextMeshProUGUI>(true)) if (lbl != null && !lbl.transform.IsChildOf(switcher.transform)) { titleLbl = lbl; locComp = titleLbl.GetComponent<LocalizedTextMeshPro>(); break; }
                     if (titleLbl != null) { if (locComp != null) locComp.enabled = false; titleLbl.text = LocalizationManager.Instance?.TryGetTranslationText(setting.DisplayNameKey) ?? setting.DisplayNameKey; } else LogWarning($"No title label for {setting.UniqueSettingId}");
 
