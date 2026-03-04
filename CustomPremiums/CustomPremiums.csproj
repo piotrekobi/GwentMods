@@ -10,7 +10,7 @@
 		<FileVersion>1.0.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<AssemblyName>CustomPremiums</AssemblyName>
-		<Platforms>AnyCPU;x64</Platforms>
+		<Platforms>x64;AnyCPU</Platforms>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -68,6 +68,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	  <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(GwentRoot)\Mods&quot;" />
+	  <MakeDir Directories="$(GwentRoot)\Mods\" />
+	  <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(GwentRoot)\Mods\&quot;" />
 	</Target>
 </Project>

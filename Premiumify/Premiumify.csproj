@@ -81,6 +81,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <MakeDir Directories="$(GwentRoot)\Mods\" />
 	  <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(GwentRoot)\Mods&quot;" />
 	</Target>
 </Project>
