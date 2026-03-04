@@ -10,6 +10,7 @@ A collection of [MelonLoader](https://github.com/LavaGang/MelonLoader) mods for 
 | [**Premiumify**](#premiumify) | Force all cards to render as premium during gameplay |
 | [**ModSettings**](#modsettings) | Framework for adding a "MODS" tab to the in-game Settings panel |
 | [**ModSettingsTest**](#modsettingstest) | Example mod that demonstrates the ModSettings API |
+| [**Boardify**](#boardify) | Allows you to use any board with any deck |
 
 ## Prerequisites
 
@@ -105,6 +106,25 @@ The mod uses multiple Harmony hooks to force `IsPremium = true` on cards at vari
 | `SelectChoicesHandlerComponent.AttachToGame` | Premium-ifies choice/mulligan cards |
 
 The mod only activates during the Gameplay scene — deck builder, collection, and menus are unaffected.
+
+---
+
+## Boardify
+
+A gameplay mod that allows you to pick any existing field and use it with any of your decks.
+
+Can be toggled on/off via the in-game Settings panel (requires ModSettings).
+Fields should be changed via in-game Settings panel (requires ModSettings).
+
+### How It Works
+
+The mod hooks into the board loading process and overrides the active board based on the user’s saved preference:
+
+| Hook | Purpose |
+|------|---------|
+| `BoardLoader.LoadBoard (Prefix)` | Checks the saved CurrentBoard preference and, if the mod is enabled, forces the BoardArtDefinition.ArtId to match the selected board. |
+
+The mod works for both main menu and gameplay scenes. Reloading a board requires getting into the game, changing deck board, or closing and reopening current main menu scene.
 
 ---
 
