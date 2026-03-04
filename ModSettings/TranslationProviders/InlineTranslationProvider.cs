@@ -1,5 +1,6 @@
-﻿using ModSettings;
-using System.Text.Json;
+﻿using System.Text.Json;
+
+#nullable enable
 
 namespace ModSettings.TranslationProviders;
 

@@ -11,7 +11,8 @@ namespace Boardify;
 
 public class BoardifyMod : MelonMod
 {
-    const string ModId = "Boardify";
+    private const string ModId = "Boardify";
+
     internal static MelonPreferences_Entry<string> boardPreference = null!;
     private static string? pendingBoard;
 
@@ -30,22 +31,13 @@ public class BoardifyMod : MelonMod
 
     private static void RegisterEnableSwitch(ITranslationProvider translationProvider)
     {
-        string translationKey = "Boardify_Enabled_Translation";
-        ModSettingsMod.RegisterTranslationKey(ModId, translationKey, translationProvider.GetTranslations(translationKey));
-        ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslations(true.ToString()));
-        ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslations(false.ToString()));
-
-        var switcherOptions = new List<Tuple<string, Func<string>>>
-        {
-            Tuple.Create(true.ToString(), () => true.ToString()),
-            Tuple.Create(false.ToString(), () => false.ToString()),
-        };
-
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            uniqueSettingId: "BoardifyEnabled",
-            displayTranslationKey: translationKey,
-            switcherOptions: switcherOptions,
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Enabled_Translation", translationProvider.GetTranslations("Boardify_Enabled_Translation")),
+            switcherOptions: new List<string> { 
+                ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslations(true.ToString())),
+                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslations(false.ToString())) 
+            },
             getCurrentValue: () => isModEnabledPreference.Value.ToString(), // currently saved value
             onValueChangedCallback: val => pendingEnable = val as string != isModEnabledPreference.Value.ToString() ? val as string : null, // user changed the switcher in UI
             hasPendingChangesCallback: () => pendingEnable != null, // are there unsaved changes?
@@ -55,21 +47,14 @@ public class BoardifyMod : MelonMod
 
     private static void RegisterAllBoards(ITranslationProvider translationProvider)
     {
-        var translationKey = "Current_Board_Translation";
-        ModSettingsMod.RegisterTranslationKey(ModId, translationKey, translationProvider.GetTranslations(translationKey));
-
-        var switcherOptions = new List<Tuple<string, Func<string>>>();
+        var switcherOptions = new List<string>();
         foreach (BoardId board in Enum.GetValues(typeof(BoardId)))
         {
-            string name = board.ToString();
-            ModSettingsMod.RegisterTranslationKey(ModId, name, translationProvider.GetTranslations(name));
-            switcherOptions.Add(Tuple.Create(name, () => name));
+            switcherOptions.Add(ModSettingsMod.RegisterTranslationKey(ModId, board.ToString(), translationProvider.GetTranslations(board.ToString())));
         }
-
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            uniqueSettingId: "CurrentBoard",
-            displayTranslationKey: translationKey,
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Current_Board_Translation", translationProvider.GetTranslations("Current_Board_Translation")),
             switcherOptions: switcherOptions,
             getCurrentValue: () => boardPreference.Value, // what's currently saved
             onValueChangedCallback: val => pendingBoard = val as string != boardPreference.Value ? val as string : null, // user changed the switcher in UI

@@ -1,5 +1,6 @@
-﻿using ModSettings;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+
+#nullable enable
 
 namespace ModSettings.TranslationProviders;
 
