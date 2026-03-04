@@ -88,6 +88,7 @@ public class ModSettings : MelonMod
     internal static void RegisterModTranslation(string modId, string languageCode, string key, string value)
     {
         if (string.IsNullOrEmpty(modId) || string.IsNullOrEmpty(languageCode) || string.IsNullOrEmpty(key)) { LogError($"Failed to register translation: invalid arguments (modId: {modId}, lang: {languageCode}, key: {key})"); return; }
+        key = key.ToLowerInvariant();
         if (!AllModTranslations.TryGetValue(languageCode, out var langDict)) { langDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); AllModTranslations[languageCode] = langDict; }
         if (langDict.ContainsKey(key) && langDict[key] != value) LogWarning($"Translation key '{key}' for lang '{languageCode}' (mod '{modId}') is being overwritten.");
         langDict[key] = value;
