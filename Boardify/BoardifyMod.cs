@@ -2,14 +2,14 @@
 using Il2CppGwentGameplay;
 using Il2CppGwentUnity;
 using MelonLoader;
+using ModSettings;
 using ModSettings.TranslationProviders;
-using System.Xml.Linq;
 
-[assembly: MelonInfo(typeof(Boardify.Boardify), "Boardify", "1.0.0", "Jester")]
+[assembly: MelonInfo(typeof(Boardify.BoardifyMod), "Boardify", "1.0.0", "Jester")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 namespace Boardify;
 
-public class Boardify : MelonMod
+public class BoardifyMod : MelonMod
 {
     const string ModId = "Boardify";
     internal static MelonPreferences_Entry<string> boardPreference = null!;
@@ -31,17 +31,17 @@ public class Boardify : MelonMod
     private static void RegisterEnableSwitch(ITranslationProvider translationProvider)
     {
         string translationKey = "Boardify_Enabled_Translation";
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, translationKey, translationProvider.GetTranslations(translationKey));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslations(true.ToString()));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslations(false.ToString()));
-        
+        ModSettingsMod.RegisterTranslationKey(ModId, translationKey, translationProvider.GetTranslations(translationKey));
+        ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslations(true.ToString()));
+        ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslations(false.ToString()));
+
         var switcherOptions = new List<Tuple<string, Func<string>>>
         {
             Tuple.Create(true.ToString(), () => true.ToString()),
             Tuple.Create(false.ToString(), () => false.ToString()),
         };
 
-        ModSettings.ModSettings.RegisterSwitcherSetting(
+        ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
             uniqueSettingId: "BoardifyEnabled",
             displayTranslationKey: translationKey,
@@ -56,17 +56,17 @@ public class Boardify : MelonMod
     private static void RegisterAllBoards(ITranslationProvider translationProvider)
     {
         var translationKey = "Current_Board_Translation";
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, translationKey, translationProvider.GetTranslations(translationKey));
+        ModSettingsMod.RegisterTranslationKey(ModId, translationKey, translationProvider.GetTranslations(translationKey));
 
         var switcherOptions = new List<Tuple<string, Func<string>>>();
         foreach (BoardId board in Enum.GetValues(typeof(BoardId)))
         {
             string name = board.ToString();
-            ModSettings.ModSettings.RegisterTranslationKey(ModId, name, translationProvider.GetTranslations(name));
+            ModSettingsMod.RegisterTranslationKey(ModId, name, translationProvider.GetTranslations(name));
             switcherOptions.Add(Tuple.Create(name, () => name));
         }
 
-        ModSettings.ModSettings.RegisterSwitcherSetting(
+        ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
             uniqueSettingId: "CurrentBoard",
             displayTranslationKey: translationKey,
@@ -90,11 +90,11 @@ public static class Patch_LoadBoard
             if (definition == null)
                 return;
 
-            MelonLogger.Msg("Current board preference: " + Boardify.boardPreference.Value);
-            int desiredBoard = (int)Enum.Parse(typeof(BoardId), Boardify.boardPreference.Value);
+            MelonLogger.Msg("Current board preference: " + BoardifyMod.boardPreference.Value);
+            int desiredBoard = (int)Enum.Parse(typeof(BoardId), BoardifyMod.boardPreference.Value);
             if (definition.ArtId != desiredBoard)
             {
-                if (Boardify.isModEnabledPreference.Value == true)
+                if (BoardifyMod.isModEnabledPreference.Value == true)
                 {
                     definition.ArtId = desiredBoard;
                     MelonLogger.Msg($"Forced Board ArtId to {desiredBoard}");

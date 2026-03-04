@@ -3,13 +3,14 @@ using Il2CppGwentGameplay;
 using Il2CppGwentVisuals;
 using MelonLoader;
 using System.Diagnostics;
+using ModSettings;
 
-[assembly: MelonInfo(typeof(Premiumify.Premiumify), "Premiumify", "1.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(Premiumify.PremiumifyMod), "Premiumify", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace Premiumify;
 
-public class Premiumify : MelonMod
+public class PremiumifyMod : MelonMod
 {
     private static MelonLogger.Instance staticLogger;
     internal static MelonPreferences_Category premiumifyCategory;
@@ -46,7 +47,7 @@ public class Premiumify : MelonMod
             Tuple.Create("disabled", () => DisabledLocKey),
         };
 
-        ModSettings.ModSettings.RegisterSwitcherSetting(ModId, PremiumifySettingKey, PremiumifySettingLocKey,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, PremiumifySettingKey, PremiumifySettingLocKey,
             switcherOptions,
             GetCurrentEnablePremiumifyValue,
             OnPremiumifySettingChangedInUI,
@@ -55,7 +56,7 @@ public class Premiumify : MelonMod
             RevertPendingPremiumifyChanges);
         Log("ModSettings Registered");
 
-        try { HarmonyInstance.PatchAll(typeof(Premiumify).Assembly); Log("Harmony Patched"); }
+        try { HarmonyInstance.PatchAll(typeof(PremiumifyMod).Assembly); Log("Harmony Patched"); }
         catch (Exception e) { LogError("Harmony PatchAll Error", e); }
         Log("Init Complete");
     }
@@ -74,15 +75,15 @@ public class Premiumify : MelonMod
 
     private static void RegisterPremiumifyTranslations()
     {
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, PremiumifySettingLocKey, new Dictionary<string, string>() {
+        ModSettingsMod.RegisterTranslationKey(ModId, PremiumifySettingLocKey, new Dictionary<string, string>() {
             { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" },
             { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }});
 
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, EnabledLocKey, new Dictionary<string, string>() {
+        ModSettingsMod.RegisterTranslationKey(ModId, EnabledLocKey, new Dictionary<string, string>() {
             { "en-us", "ENABLED" }, { "pl-pl", "WŁĄCZONE" }, { "de-de", "AKTIVIERT" }, { "ru-ru", "ВКЛЮЧЕНО" }, { "fr-fr", "ACTIVÉ" }, { "it-it", "ABILITATO" }, { "es-es", "ACTIVADO" },
             { "es-mx", "ACTIVADO" }, { "pt-br", "ATIVADO" }, { "zh-cn", "已启用" }, { "ja-jp", "有効" }, { "ko-kr", "활성화됨" }});
 
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, DisabledLocKey, new Dictionary<string, string>() {
+        ModSettingsMod.RegisterTranslationKey(ModId, DisabledLocKey, new Dictionary<string, string>() {
             { "en-us", "DISABLED" }, { "pl-pl", "WYŁĄCZONE" }, { "de-de", "DEAKTIVIERT" }, { "ru-ru", "ОТКЛЮЧЕНО" }, { "fr-fr", "DÉSACTIVÉ" }, { "it-it", "DISABILITATO" }, { "es-es", "DESACTIVADO" },
             { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }});
 

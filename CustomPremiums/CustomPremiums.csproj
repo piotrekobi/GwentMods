@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="CustomPremiums.cs" />
+		<Compile Include="CustomPremiumsMod.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

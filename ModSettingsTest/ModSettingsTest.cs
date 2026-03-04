@@ -1,4 +1,5 @@
 ﻿using MelonLoader;
+using ModSettings;
 using System.Diagnostics;
 
 [assembly: MelonInfo(typeof(ModSettingsTest.ModSettingsTest), "ModSettingsTest", "1.0.0", "piotrekobi")]
@@ -88,7 +89,7 @@ public class ModSettingsTest : MelonMod
             Tuple.Create("s1_opt2", () => S1Opt2LocKey),
             Tuple.Create("s1_opt3", () => S1Opt3LocKey)
         };
-        ModSettings.ModSettings.RegisterSwitcherSetting(ModId, Switcher1SettingKey, Switcher1LocKey, switcher1Options,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher1SettingKey, Switcher1LocKey, switcher1Options,
             GetCurrentSwitcher1Value, OnSwitcher1ChangedInUI, HasPendingSwitcher1Changes, ApplyPendingSwitcher1Changes, RevertPendingSwitcher1Changes);
 
         var switcher2Options = new List<Tuple<string, Func<string>>>
@@ -98,7 +99,7 @@ public class ModSettingsTest : MelonMod
             Tuple.Create("s2_opt3", () => S2Opt3LocKey),
             Tuple.Create("s2_opt4", () => S2Opt4LocKey)
         };
-        ModSettings.ModSettings.RegisterSwitcherSetting(ModId, Switcher2SettingKey, Switcher2LocKey, switcher2Options,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher2SettingKey, Switcher2LocKey, switcher2Options,
             GetCurrentSwitcher2Value, OnSwitcher2ChangedInUI, HasPendingSwitcher2Changes, ApplyPendingSwitcher2Changes, RevertPendingSwitcher2Changes);
 
         var switcher3Options = new List<Tuple<string, Func<string>>>
@@ -109,7 +110,7 @@ public class ModSettingsTest : MelonMod
             Tuple.Create("s3_opt4", () => S3Opt4LocKey),
             Tuple.Create("s3_opt5", () => S3Opt5LocKey)
         };
-        ModSettings.ModSettings.RegisterSwitcherSetting(ModId, Switcher3SettingKey, Switcher3LocKey, switcher3Options,
+        ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher3SettingKey, Switcher3LocKey, switcher3Options,
             GetCurrentSwitcher3Value, OnSwitcher3ChangedInUI, HasPendingSwitcher3Changes, ApplyPendingSwitcher3Changes, RevertPendingSwitcher3Changes);
 
         for (int i = 0; i < 10; i++)
@@ -121,7 +122,7 @@ public class ModSettingsTest : MelonMod
                 Tuple.Create($"add_s{local_i + 1}_opt_b", () => AdditionalOptBLocKey)
             };
 
-            ModSettings.ModSettings.RegisterSwitcherSetting(ModId,
+            ModSettingsMod.RegisterSwitcherSetting(ModId,
                 additionalSwitcherSettingKeys[local_i],
                 additionalSwitcherLocKeys[local_i],
                 additionalSwitcherOptions,
@@ -149,31 +150,31 @@ public class ModSettingsTest : MelonMod
             return dict;
         }
 
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, Switcher1LocKey, CreateDummyTranslations("Test Switcher 1"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, Switcher2LocKey, CreateDummyTranslations("Test Switcher 2"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, Switcher3LocKey, CreateDummyTranslations("Test Switcher 3"));
+        ModSettingsMod.RegisterTranslationKey(ModId, Switcher1LocKey, CreateDummyTranslations("Test Switcher 1"));
+        ModSettingsMod.RegisterTranslationKey(ModId, Switcher2LocKey, CreateDummyTranslations("Test Switcher 2"));
+        ModSettingsMod.RegisterTranslationKey(ModId, Switcher3LocKey, CreateDummyTranslations("Test Switcher 3"));
 
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S1Opt1LocKey, CreateDummyTranslations("S1 Option One"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S1Opt2LocKey, CreateDummyTranslations("S1 Option Two"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S1Opt3LocKey, CreateDummyTranslations("S1 Option Three"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S1Opt1LocKey, CreateDummyTranslations("S1 Option One"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S1Opt2LocKey, CreateDummyTranslations("S1 Option Two"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S1Opt3LocKey, CreateDummyTranslations("S1 Option Three"));
 
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S2Opt1LocKey, CreateDummyTranslations("S2 Option A"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S2Opt2LocKey, CreateDummyTranslations("S2 Option B"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S2Opt3LocKey, CreateDummyTranslations("S2 Option C"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S2Opt4LocKey, CreateDummyTranslations("S2 Option D"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S2Opt1LocKey, CreateDummyTranslations("S2 Option A"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S2Opt2LocKey, CreateDummyTranslations("S2 Option B"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S2Opt3LocKey, CreateDummyTranslations("S2 Option C"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S2Opt4LocKey, CreateDummyTranslations("S2 Option D"));
 
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S3Opt1LocKey, CreateDummyTranslations("S3 Choice Alpha"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S3Opt2LocKey, CreateDummyTranslations("S3 Choice Beta"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S3Opt3LocKey, CreateDummyTranslations("S3 Choice Gamma"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S3Opt4LocKey, CreateDummyTranslations("S3 Choice Delta"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, S3Opt5LocKey, CreateDummyTranslations("S3 Choice Epsilon"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S3Opt1LocKey, CreateDummyTranslations("S3 Choice Alpha"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S3Opt2LocKey, CreateDummyTranslations("S3 Choice Beta"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S3Opt3LocKey, CreateDummyTranslations("S3 Choice Gamma"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S3Opt4LocKey, CreateDummyTranslations("S3 Choice Delta"));
+        ModSettingsMod.RegisterTranslationKey(ModId, S3Opt5LocKey, CreateDummyTranslations("S3 Choice Epsilon"));
 
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, AdditionalOptALocKey, CreateDummyTranslations("Option A / On"));
-        ModSettings.ModSettings.RegisterTranslationKey(ModId, AdditionalOptBLocKey, CreateDummyTranslations("Option B / Off"));
+        ModSettingsMod.RegisterTranslationKey(ModId, AdditionalOptALocKey, CreateDummyTranslations("Option A / On"));
+        ModSettingsMod.RegisterTranslationKey(ModId, AdditionalOptBLocKey, CreateDummyTranslations("Option B / Off"));
 
         for (int i = 0; i < 10; i++)
         {
-            ModSettings.ModSettings.RegisterTranslationKey(ModId, additionalSwitcherLocKeys[i], CreateDummyTranslations($"Scroll Test Switcher {i + 1}"));
+            ModSettingsMod.RegisterTranslationKey(ModId, additionalSwitcherLocKeys[i], CreateDummyTranslations($"Scroll Test Switcher {i + 1}"));
         }
 
         Log("Translations Registered");

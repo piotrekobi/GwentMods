@@ -9,12 +9,12 @@ using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.UI;
 
-[assembly: MelonInfo(typeof(ModSettings.ModSettings), "ModSettings", "1.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(ModSettings.ModSettingsMod), "ModSettings", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace ModSettings;
 
-public class ModSettings : MelonMod
+public class ModSettingsMod : MelonMod
 {
     private static MelonLogger.Instance staticLogger;
 
@@ -57,7 +57,7 @@ public class ModSettings : MelonMod
     public override void OnInitializeMelon()
     {
         staticLogger = LoggerInstance; Log("OnInitializeMelon");
-        try { HarmonyInstance.PatchAll(typeof(ModSettings).Assembly); Log("Harmony Patched."); }
+        try { HarmonyInstance.PatchAll(typeof(ModSettingsMod).Assembly); Log("Harmony Patched."); }
         catch (Exception e) { LogError("Harmony PatchAll Error", e); }
         RegisterTranslationKey("ModSettings", ModCategoryLocalizationKey, new Dictionary<string, string>() {
             { "en-us", "MODS" }, { "pl-pl", "MODY" }, { "de-de", "MODS" }, { "ru-ru", "МОДЫ" }, { "fr-fr", "MODS" }, { "it-it", "MODS" },

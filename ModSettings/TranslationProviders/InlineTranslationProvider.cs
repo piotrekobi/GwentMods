@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using ModSettings;
+using System.Text.Json;
 
 namespace ModSettings.TranslationProviders;
 

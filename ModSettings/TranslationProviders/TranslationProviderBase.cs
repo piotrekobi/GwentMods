@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using ModSettings;
+using System.Text.RegularExpressions;
 
 namespace ModSettings.TranslationProviders;
 
@@ -19,7 +20,7 @@ public abstract class TranslationProviderBase : ITranslationProvider
         var result = new Dictionary<string, string>(translations);
 
         // Ensure all required languages are present; fill missing ones from dummy
-        foreach (var lang in ModSettings.RequiredLanguages)
+        foreach (var lang in ModSettingsMod.RequiredLanguages)
         {
             if (!result.TryGetValue(lang, out var val) || string.IsNullOrWhiteSpace(val))
                 result[lang] = dummy[lang];
@@ -34,7 +35,7 @@ public abstract class TranslationProviderBase : ITranslationProvider
         string readableText = Regex.Replace(baseText, "(?<!^)([A-Z])", " $1");
 
         var dict = new Dictionary<string, string>();
-        foreach (var lang in ModSettings.RequiredLanguages)
+        foreach (var lang in ModSettingsMod.RequiredLanguages)
             dict[lang] = readableText;
 
         return dict;
