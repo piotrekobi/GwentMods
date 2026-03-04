@@ -165,115 +165,79 @@ Create a `MelonPreferences` category and entries for your settings. These persis
 ```csharp
 public class MyMod : MelonMod
 {
-    // Preference storage
-    static MelonPreferences_Entry<string> _difficultyPref;
-
-    // Pending value (tracks unsaved UI changes)
-    static string _pendingDifficulty;
+    internal static MelonPreferences_Entry<string> difficultyPref = null!; // Preference storage
 
     public override void OnInitializeMelon()
     {
         // Create preferences (saved to UserData/MelonPreferences.cfg)
-        _difficultyPref = MelonPreferences.CreateCategory("MyMod").CreateEntry("Difficulty", "normal");
-        // _difficultyPref.Value is now "normal" on first run,
-        // or whatever the user last saved
+        difficultyPref = MelonPreferences.CreateCategory("MyMod").CreateEntry("Difficulty", "normal");
+        // difficultyPref.Value is now "normal" on first run, or whatever the user saved last
 
-        RegisterTranslations();
         RegisterSettings();
     }
 }
 ```
 
-#### Step 3: Register Translations
+#### Step 3: Register a Switcher Setting
 
 Every visible string needs translations for all 12 supported languages. Call `RegisterTranslationKey` during `OnInitializeMelon`:
 
 ```csharp
-// Required languages: en-us, pl-pl, de-de, ru-ru, fr-fr, it-it,
-//                     es-es, es-mx, pt-br, zh-cn, ja-jp, ko-kr
-
-// Helper for quick translations (uses same text for all languages)
-Dictionary<string, string> T(string text) =>
+static Dictionary<string, string> T(string text) => // Helper for quick translations (uses same text for all languages)
     new[] { "en-us", "pl-pl", "de-de", "ru-ru", "fr-fr", "it-it",
             "es-es", "es-mx", "pt-br", "zh-cn", "ja-jp", "ko-kr" }
-    .ToDictionary(l => l, l => text);
+    .ToDictionary(l => l, l => text); // All languages are required
 
-void RegisterTranslations()
+static void RegisterSettings()
 {
-    // Setting label
-    ModSettings.ModSettings.RegisterTranslationKey("MyMod", "mymod_difficulty", T("Difficulty"));
-
-    // Option labels
-    ModSettings.ModSettings.RegisterTranslationKey("MyMod", "mymod_diff_easy",   T("Easy"));
-    ModSettings.ModSettings.RegisterTranslationKey("MyMod", "mymod_diff_normal", T("Normal"));
-    ModSettings.ModSettings.RegisterTranslationKey("MyMod", "mymod_diff_hard",   T("Hard"));
-}
-```
-
-#### Step 4: Register a Switcher Setting
-
-```csharp
-void RegisterSettings()
-{
-    // Define options: List of (id, localization key getter)
-    var options = new List<Tuple<string, Func<string>>>
+    // Define list of options
+    var options = new List<string>
     {
-        Tuple.Create("easy",   () => "mymod_diff_easy"),
-        Tuple.Create("normal", () => "mymod_diff_normal"),
-        Tuple.Create("hard",   () => "mymod_diff_hard"),
+        ModSettingsMod.RegisterTranslationKey("MyMod", "Easy",   T("Easy")),
+        ModSettingsMod.RegisterTranslationKey("MyMod", "Normal", T("Normal")),
+        ModSettingsMod.RegisterTranslationKey("MyMod", "Hard",   T("Hard")),
     };
 
-    ModSettings.ModSettings.RegisterSwitcherSetting(
+    string? pendingDifficulty = null; // Pending value (tracks unsaved UI changes)
+	
+    ModSettingsMod.RegisterSwitcherSetting(
         modId:            "MyMod",
-        settingKey:       "Difficulty",
-        displayNameKey:   "mymod_difficulty",       // localization key for setting label
+        settingTranslationKey:   ModSettingsMod.RegisterTranslationKey("MyMod", "Difficulty", T("Difficulty")), // localization key for setting label
         switcherOptions:  options,
-
-        getCurrentValue:  () => _difficultyPref.Value,  // what's currently saved
-
+        getCurrentValue:  () => difficultyPref.Value,  // what's currently saved
         onValueChangedCallback: (val) =>            // user changed the switcher in UI
         {
             string newVal = val as string;
             // Only mark as pending if different from saved value
-            _pendingDifficulty = (newVal != _difficultyPref.Value) ? newVal : null;
+            pendingDifficulty = (newVal != difficultyPref.Value) ? newVal : null;
         },
-
-        hasPendingChangesCallback:    () => _pendingDifficulty != null,
-
+        hasPendingChangesCallback:    () => pendingDifficulty != null,
         applyPendingChangesCallback:  () =>          // user clicked Save
         {
-            if (_pendingDifficulty != null)
+            if (pendingDifficulty != null)
             {
-                _difficultyPref.Value = _pendingDifficulty;
-                _pendingDifficulty = null;
+                difficultyPref.Value = pendingDifficulty;
+                pendingDifficulty = null;
                 // MelonPreferences.Save() is called automatically by ModSettings
             }
         },
-
-        revertPendingChangesCallback: () =>          // user clicked Back/Cancel
-        {
-            _pendingDifficulty = null;
-        }
+        revertPendingChangesCallback: () => { pendingDifficulty = null; } // user clicked Back/Cancel
     );
 }
 ```
 
-#### Step 5: Use the Saved Value in Your Mod
+#### Step 4: Use the Saved Value in Your Mod
 
+The value persists across game restarts — MelonLoader saves it to UserData/MelonPreferences.cfg automatically.
 The preference value is available anywhere in your mod via the `MelonPreferences_Entry`:
 
 ```csharp
 // Read the current saved value at any time
-string difficulty = _difficultyPref.Value;  // "easy", "normal", or "hard"
-
 // Use it in your mod logic
-if (difficulty == "hard")
+if (MyMod.difficultyPref.Value == "hard")
 {
     // Apply hard mode behavior
 }
-
-// The value persists across game restarts — MelonLoader saves it to
-// UserData/MelonPreferences.cfg automatically
 ```
 
 #### Callback Flow
