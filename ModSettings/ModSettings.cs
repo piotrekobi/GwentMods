@@ -38,7 +38,7 @@ public class ModSettings : MelonMod
     private static readonly Dictionary<string, Action> ModApplyPendingChangesCallbacks = [];
     private static readonly Dictionary<string, Action> ModRevertPendingChangesCallbacks = [];
 
-    private static readonly List<string> RequiredLanguages = ["en-us", "pl-pl", "de-de", "ru-ru", "fr-fr", "it-it", "es-es", "es-mx", "pt-br", "zh-cn", "ja-jp", "ko-kr"];
+    public static readonly List<string> RequiredLanguages = ["en-us", "pl-pl", "de-de", "ru-ru", "fr-fr", "it-it", "es-es", "es-mx", "pt-br", "zh-cn", "ja-jp", "ko-kr"];
 
     private struct RegisteredModSetting
     {
