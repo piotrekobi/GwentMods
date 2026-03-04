@@ -13,11 +13,8 @@ namespace Premiumify;
 public class PremiumifyMod : MelonMod
 {
     private static MelonLogger.Instance staticLogger;
-    internal static MelonPreferences_Category premiumifyCategory;
-    internal static MelonPreferences_Entry<int> enablePremiumifyPref;
-    private static int? _pendingEnablePremiumifyValue;
+    internal static MelonPreferences_Entry<bool> isPremiumifyEnabledPref;
     private static bool _isGameplaySceneCurrentlyActive = false;
-
     internal const string ModId = "Premiumify";
 
     [Conditional("DEBUG")] internal static void Log(string m) => staticLogger?.Msg($"[{ModId}] {m}");
@@ -29,35 +26,36 @@ public class PremiumifyMod : MelonMod
         Log("Init");
         try
         {
-            premiumifyCategory = MelonPreferences.CreateCategory(ModId);
-            enablePremiumifyPref = premiumifyCategory.CreateEntry("EnablePremiumify", 1);
+            isPremiumifyEnabledPref = MelonPreferences.CreateCategory(ModId).CreateEntry("EnablePremiumify", true);
             Log("Prefs Loaded");
         }
         catch (Exception e) { LogError("Prefs Init Error", e); }
 
         var settingTranslationKey = ModSettingsMod.RegisterTranslationKey(ModId, "Premiumify_Enabled_Switch", new Dictionary<string, string>() {
-                { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" },
-                { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }});
+            { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" }, 
+            { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }});
 
         var switcherOptions = new List<string>
         {
-            ModSettingsMod.RegisterTranslationKey(ModId, "Premiumify_Enabled", new Dictionary<string, string>() {
+            ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), new Dictionary<string, string>() {
                 { "en-us", "ENABLED" }, { "pl-pl", "WŁĄCZONE" }, { "de-de", "AKTIVIERT" }, { "ru-ru", "ВКЛЮЧЕНО" }, { "fr-fr", "ACTIVÉ" }, { "it-it", "ABILITATO" }, { "es-es", "ACTIVADO" },
                 { "es-mx", "ACTIVADO" }, { "pt-br", "ATIVADO" }, { "zh-cn", "已启用" }, { "ja-jp", "有効" }, { "ko-kr", "활성화됨" }}),
 
-            ModSettingsMod.RegisterTranslationKey(ModId, "Premiumify_Disabled", new Dictionary<string, string>() {
+            ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), new Dictionary<string, string>() {
                 { "en-us", "DISABLED" }, { "pl-pl", "WYŁĄCZONE" }, { "de-de", "DEAKTIVIERT" }, { "ru-ru", "ОТКЛЮЧЕНО" }, { "fr-fr", "DÉSACTIVÉ" }, { "it-it", "DISABILITATO" }, { "es-es", "DESACTIVADO" },
                 { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }}),
         };
 
-        ModSettingsMod.RegisterSwitcherSetting(ModId,
+        bool? _pendingEnablePremiumifyValue = null;
+        ModSettingsMod.RegisterSwitcherSetting(
+            ModId,
             settingTranslationKey,
             switcherOptions,
-            GetCurrentEnablePremiumifyValue,
-            OnPremiumifySettingChangedInUI,
-            HasPendingPremiumifyChanges,
-            ApplyPendingPremiumifyChanges,
-            RevertPendingPremiumifyChanges);
+            getCurrentValue: () => isPremiumifyEnabledPref.Value.ToString(),
+            onValueChangedCallback: val => { if (val is string strVal) { bool newBool = bool.Parse(strVal); _pendingEnablePremiumifyValue = newBool != isPremiumifyEnabledPref.Value ? newBool : null; } },
+            hasPendingChangesCallback: () => _pendingEnablePremiumifyValue.HasValue,
+            applyPendingChangesCallback: () => { if (_pendingEnablePremiumifyValue.HasValue) { isPremiumifyEnabledPref.Value = _pendingEnablePremiumifyValue.Value; _pendingEnablePremiumifyValue = null; } },
+            revertPendingChangesCallback: () => _pendingEnablePremiumifyValue = null);
         Log("ModSettings Registered");
 
         try { HarmonyInstance.PatchAll(typeof(PremiumifyMod).Assembly); Log("Harmony Patched"); }
@@ -77,52 +75,13 @@ public class PremiumifyMod : MelonMod
         if (sceneName == "Gameplay") { _isGameplaySceneCurrentlyActive = false; Log("Gameplay Scene Unloaded"); }
     }
 
-    private static object GetCurrentEnablePremiumifyValue()
+    public static void ApplyPremium(Card card)
     {
-        int val = enablePremiumifyPref.Value;
-        if (val == 1) return "enabled";
-        return "disabled";
-    }
-
-    private static void OnPremiumifySettingChangedInUI(object newValIdObj)
-    {
-        if (newValIdObj is not string newValId) return;
-
-        int currentPrefValue = enablePremiumifyPref.Value;
-        int newIntValue = 0;
-
-        if (newValId == "enabled") newIntValue = 1;
-        if (newIntValue != currentPrefValue)
-        {
-            _pendingEnablePremiumifyValue = newIntValue;
-        }
-        else
-        {
-            _pendingEnablePremiumifyValue = null;
-        }
-    }
-
-    private static bool HasPendingPremiumifyChanges() => _pendingEnablePremiumifyValue.HasValue;
-
-    private static void ApplyPendingPremiumifyChanges()
-    {
-        if (!_pendingEnablePremiumifyValue.HasValue) return;
-        if (_pendingEnablePremiumifyValue.Value != enablePremiumifyPref.Value)
-        {
-            enablePremiumifyPref.Value = _pendingEnablePremiumifyValue.Value;
-        }
-        _pendingEnablePremiumifyValue = null;
-    }
-    private static void RevertPendingPremiumifyChanges() { _pendingEnablePremiumifyValue = null; }
-
-    public static class PremiumHelper
-    {
-        public static void ApplyPremium(Card c)
-        {
-            if (c == null || c.Definition.IsPremium || c.Definition.TemplateId == 0) return;
-            var m = c.Definition; m.IsPremium = true; c.Definition = m;
-            try { c.OnDefinitionChanged?.Invoke(c, c.Definition); } catch { }
-        }
+        if (card == null || card.Definition.IsPremium || card.Definition.TemplateId == 0) return;
+        var definition = card.Definition;
+        definition.IsPremium = true;
+        card.Definition = definition;
+        try { card.OnDefinitionChanged?.Invoke(card, card.Definition); } catch { }
     }
 
     [HarmonyPatch(typeof(Card), "Play")]
@@ -130,7 +89,7 @@ public class PremiumifyMod : MelonMod
     {
         static void Postfix(Card __instance)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive) PremiumHelper.ApplyPremium(__instance);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive) ApplyPremium(__instance);
         }
     }
 
@@ -139,11 +98,11 @@ public class PremiumifyMod : MelonMod
     {
         static void Prefix(Card card)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive && card != null) ApplyPremium(card);
         }
         static void Postfix(Card card)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && card != null) PremiumHelper.ApplyPremium(card);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive && card != null) ApplyPremium(card);
         }
     }
 
@@ -152,12 +111,12 @@ public class PremiumifyMod : MelonMod
     {
         static void Prefix(ref CardDefinition definition)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && !definition.IsPremium && definition.TemplateId != 0)
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive && !definition.IsPremium && definition.TemplateId != 0)
                 definition.IsPremium = true;
         }
         static void Postfix(Card __instance)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive && __instance != null) ApplyPremium(__instance);
         }
     }
 
@@ -166,9 +125,9 @@ public class PremiumifyMod : MelonMod
     {
         static void Postfix(SelectChoicesHandlerComponent __instance)
         {
-            if (enablePremiumifyPref.Value != 1 || !_isGameplaySceneCurrentlyActive || __instance == null) return;
-            if (__instance.m_ValidChoiceCards != null) foreach (var card in __instance.m_ValidChoiceCards) PremiumHelper.ApplyPremium(card);
-            if (__instance.m_SelectedChoiceCards != null) foreach (var card in __instance.m_SelectedChoiceCards) PremiumHelper.ApplyPremium(card);
+            if (!isPremiumifyEnabledPref.Value || !_isGameplaySceneCurrentlyActive || __instance == null) return;
+            if (__instance.m_ValidChoiceCards != null) foreach (var card in __instance.m_ValidChoiceCards) ApplyPremium(card);
+            if (__instance.m_SelectedChoiceCards != null) foreach (var card in __instance.m_SelectedChoiceCards) ApplyPremium(card);
         }
     }
 
@@ -177,7 +136,7 @@ public class PremiumifyMod : MelonMod
     {
         static void Postfix(Card __instance)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive && __instance != null) PremiumHelper.ApplyPremium(__instance);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive && __instance != null) ApplyPremium(__instance);
         }
     }
 
@@ -186,8 +145,8 @@ public class PremiumifyMod : MelonMod
     {
         static void Postfix(CardBattleViewAnimation __instance)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive &&
-                __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive &&
+                __instance?.BattleView?.Card != null) ApplyPremium(__instance.BattleView.Card);
         }
     }
 
@@ -196,8 +155,8 @@ public class PremiumifyMod : MelonMod
     {
         static void Postfix(CardBattleViewAnimation __instance)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive &&
-                __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive &&
+                __instance?.BattleView?.Card != null) ApplyPremium(__instance.BattleView.Card);
         }
     }
 
@@ -206,8 +165,8 @@ public class PremiumifyMod : MelonMod
     {
         static void Postfix(CardBattleViewAnimation __instance)
         {
-            if (enablePremiumifyPref.Value == 1 && _isGameplaySceneCurrentlyActive &&
-                __instance?.BattleView?.Card != null) PremiumHelper.ApplyPremium(__instance.BattleView.Card);
+            if (isPremiumifyEnabledPref.Value && _isGameplaySceneCurrentlyActive &&
+                __instance?.BattleView?.Card != null) ApplyPremium(__instance.BattleView.Card);
         }
     }
 }

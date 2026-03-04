@@ -12,17 +12,13 @@ namespace Boardify;
 public class BoardifyMod : MelonMod
 {
     private const string ModId = "Boardify";
-
     internal static MelonPreferences_Entry<string> boardPreference = null!;
-    private static string? pendingBoard;
-
     internal static MelonPreferences_Entry<bool> isModEnabledPreference = null!;
-    private static string? pendingEnable;
 
     public override void OnInitializeMelon()
     {
-        isModEnabledPreference = MelonPreferences.CreateCategory("Boardify").CreateEntry("BoardifyEnabled", true);
-        boardPreference = MelonPreferences.CreateCategory("Boardify").CreateEntry("CurrentBoard", BoardId.DandelionMeadow.ToString());
+        isModEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("BoardifyEnabled", true);
+        boardPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("CurrentBoard", BoardId.DandelionMeadow.ToString());
         var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "Boardify.BoardTranslations.json");
         RegisterEnableSwitch(translationProvider);
         RegisterAllBoards(translationProvider);
@@ -31,6 +27,7 @@ public class BoardifyMod : MelonMod
 
     private static void RegisterEnableSwitch(ITranslationProvider translationProvider)
     {
+        string? pendingEnable = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
             settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Enabled_Translation", translationProvider.GetTranslations("Boardify_Enabled_Translation")),
@@ -52,6 +49,7 @@ public class BoardifyMod : MelonMod
         {
             switcherOptions.Add(ModSettingsMod.RegisterTranslationKey(ModId, board.ToString(), translationProvider.GetTranslations(board.ToString())));
         }
+        string? pendingBoard = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
             settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Current_Board_Translation", translationProvider.GetTranslations("Current_Board_Translation")),
