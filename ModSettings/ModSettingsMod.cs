@@ -44,7 +44,7 @@ public class ModSettingsMod : MelonMod
     {
         public string ModId; public string UniqueSettingId; public string DisplayNameKey; public SettingType Type;
         public Func<object> GetCurrentValue; public Action<object> OnValueChanged;
-        public List<Tuple<string, Func<string>>> SwitcherOptions;
+        public List<string> SwitcherOptions;
         public UISettingsEntry UIEntry; public Switcher UISwitcher;
     }
 
@@ -99,28 +99,29 @@ public class ModSettingsMod : MelonMod
         }
     }
 
-    public static void RegisterTranslationKey(string modId, string key, Dictionary<string, string> localizedValues)
+    public static string RegisterTranslationKey(string modId, string key, Dictionary<string, string> localizedValues)
     {
-        if (string.IsNullOrEmpty(modId) || string.IsNullOrEmpty(key) || localizedValues == null) { LogError($"Failed to register translation key: invalid arguments (modId: {modId}, key: {key})"); return; }
+        if (string.IsNullOrEmpty(modId) || string.IsNullOrEmpty(key) || localizedValues == null) { LogError($"Failed to register translation key: invalid arguments (modId: {modId}, key: {key})"); }
         var missingLangs = RequiredLanguages.Where(rl => !localizedValues.ContainsKey(rl) || string.IsNullOrEmpty(localizedValues[rl])).ToList();
-        if (missingLangs.Any()) { LogError($"Mod '{modId}' failed to register translations for key '{key}'. Missing: {string.Join(", ", missingLangs)}."); return; }
+        if (missingLangs.Any()) { LogError($"Mod '{modId}' failed to register translations for key '{key}'. Missing: {string.Join(", ", missingLangs)}."); }
         foreach (var reqLang in RequiredLanguages) if (localizedValues.TryGetValue(reqLang, out var val) && !string.IsNullOrEmpty(val)) RegisterModTranslation(modId, reqLang, key, val);
         Log($"Successfully registered translations for key '{key}' from mod '{modId}' for all required languages.");
+        return key;
     }
 
-    public static void RegisterSwitcherSetting(string modId, string displayTranslationKey,
-        List<Tuple<string, Func<string>>> switcherOptions,
+    public static void RegisterSwitcherSetting(string modId, string settingTranslationKey,
+        List<string> switcherOptions,
         Func<object> getCurrentValue, Action<object> onValueChangedCallback,
         Func<bool> hasPendingChangesCallback, Action applyPendingChangesCallback, Action revertPendingChangesCallback)
     {
-        string uniqueSettingId = $"{modId}_{displayTranslationKey}";
+        string uniqueSettingId = $"{modId}_{settingTranslationKey}";
 
         if (RegisteredSettings.Any(s => s.ModId == modId && s.UniqueSettingId == uniqueSettingId)) { LogWarning($"Setting '{uniqueSettingId}' for mod '{modId}' already registered. Skipping."); return; }
         RegisteredSettings.Add(new RegisteredModSetting
         {
             ModId = modId,
             UniqueSettingId = uniqueSettingId,
-            DisplayNameKey = displayTranslationKey,
+            DisplayNameKey = settingTranslationKey,
             Type = SettingType.Switcher,
             SwitcherOptions = switcherOptions,
             GetCurrentValue = getCurrentValue,
@@ -247,11 +248,10 @@ public class ModSettingsMod : MelonMod
                     {
                         foreach (var option in localSetting.SwitcherOptions)
                         {
-                            var key = option.Item2();
-                            var translated = AllModTranslations.TryGetValue(LocalizationManager.Instance?.CurrentLanguage ?? "en-us", out var langDict) && langDict.TryGetValue(key, out var val)
+                            var translated = AllModTranslations.TryGetValue(LocalizationManager.Instance?.CurrentLanguage ?? "en-us", out var langDict) && langDict.TryGetValue(option, out var val)
                                                  ? val // Use the translation if available, otherwise show key
-                                                 : key;
-                            switcher.AddItem(option.Item1, translated, false);
+                                                 : option;
+                            switcher.AddItem(option, translated, false);
                         }
                     }
 
@@ -277,7 +277,7 @@ public class ModSettingsMod : MelonMod
                     {
                         foreach (var opt in localSetting.SwitcherOptions)
                         {
-                            if (opt.Item1 == currentIdToSelect)
+                            if (opt == currentIdToSelect)
                             {
                                 idFound = true;
                                 break;
@@ -291,7 +291,7 @@ public class ModSettingsMod : MelonMod
                     }
                     else if (localSetting.SwitcherOptions != null && localSetting.SwitcherOptions.Count > 0)
                     {
-                        switcher.SelectItemById(localSetting.SwitcherOptions[0].Item1);
+                        switcher.SelectItemById(localSetting.SwitcherOptions[0]);
                     }
 
                     var updatedSetting = RegisteredSettings[localIndex]; updatedSetting.UIEntry = uiSettingsEntry; updatedSetting.UISwitcher = switcher; RegisteredSettings[localIndex] = updatedSetting; Log($"Configured UI: {localSetting.ModId} - {localSetting.UniqueSettingId}");
@@ -324,7 +324,7 @@ public class ModSettingsMod : MelonMod
                         }
                         else if (setting.SwitcherOptions != null && setting.SwitcherOptions.Count > 0)
                         {
-                            setting.UISwitcher.SelectItemById(setting.SwitcherOptions[0].Item1);
+                            setting.UISwitcher.SelectItemById(setting.SwitcherOptions[0]);
                         }
                     }
                 }

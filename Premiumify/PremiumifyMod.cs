@@ -19,10 +19,6 @@ public class PremiumifyMod : MelonMod
     private static bool _isGameplaySceneCurrentlyActive = false;
 
     internal const string ModId = "Premiumify";
-    internal const string PremiumifySettingKey = "EnablePremiumify";
-    internal const string PremiumifySettingLocKey = "panel_settings_entry_mods_premiumify_setting";
-    internal const string EnabledLocKey = "panel_settings_entry_mods_premiumify_enabled";
-    internal const string DisabledLocKey = "panel_settings_entry_mods_premiumify_disabled";
 
     [Conditional("DEBUG")] internal static void Log(string m) => staticLogger?.Msg($"[{ModId}] {m}");
     [Conditional("DEBUG")] private static void LogError(string m, Exception e = null) => staticLogger?.Error($"[{ModId}] {m}" + (e == null ? "" : $"\n{e}"));
@@ -34,20 +30,28 @@ public class PremiumifyMod : MelonMod
         try
         {
             premiumifyCategory = MelonPreferences.CreateCategory(ModId);
-            enablePremiumifyPref = premiumifyCategory.CreateEntry(PremiumifySettingKey, 1);
+            enablePremiumifyPref = premiumifyCategory.CreateEntry("EnablePremiumify", 1);
             Log("Prefs Loaded");
         }
         catch (Exception e) { LogError("Prefs Init Error", e); }
 
-        RegisterPremiumifyTranslations();
+        var settingTranslationKey = ModSettingsMod.RegisterTranslationKey(ModId, "Premiumify_Enabled_Switch", new Dictionary<string, string>() {
+                { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" },
+                { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }});
 
-        var switcherOptions = new List<Tuple<string, Func<string>>>
+        var switcherOptions = new List<string>
         {
-            Tuple.Create("enabled", () => EnabledLocKey),
-            Tuple.Create("disabled", () => DisabledLocKey),
+            ModSettingsMod.RegisterTranslationKey(ModId, "Premiumify_Enabled", new Dictionary<string, string>() {
+                { "en-us", "ENABLED" }, { "pl-pl", "WŁĄCZONE" }, { "de-de", "AKTIVIERT" }, { "ru-ru", "ВКЛЮЧЕНО" }, { "fr-fr", "ACTIVÉ" }, { "it-it", "ABILITATO" }, { "es-es", "ACTIVADO" },
+                { "es-mx", "ACTIVADO" }, { "pt-br", "ATIVADO" }, { "zh-cn", "已启用" }, { "ja-jp", "有効" }, { "ko-kr", "활성화됨" }}),
+
+            ModSettingsMod.RegisterTranslationKey(ModId, "Premiumify_Disabled", new Dictionary<string, string>() {
+                { "en-us", "DISABLED" }, { "pl-pl", "WYŁĄCZONE" }, { "de-de", "DEAKTIVIERT" }, { "ru-ru", "ОТКЛЮЧЕНО" }, { "fr-fr", "DÉSACTIVÉ" }, { "it-it", "DISABILITATO" }, { "es-es", "DESACTIVADO" },
+                { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }}),
         };
 
-        ModSettingsMod.RegisterSwitcherSetting(ModId, PremiumifySettingLocKey,
+        ModSettingsMod.RegisterSwitcherSetting(ModId,
+            settingTranslationKey,
             switcherOptions,
             GetCurrentEnablePremiumifyValue,
             OnPremiumifySettingChangedInUI,
@@ -71,23 +75,6 @@ public class PremiumifyMod : MelonMod
     {
         base.OnSceneWasUnloaded(buildIndex, sceneName);
         if (sceneName == "Gameplay") { _isGameplaySceneCurrentlyActive = false; Log("Gameplay Scene Unloaded"); }
-    }
-
-    private static void RegisterPremiumifyTranslations()
-    {
-        ModSettingsMod.RegisterTranslationKey(ModId, PremiumifySettingLocKey, new Dictionary<string, string>() {
-            { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" },
-            { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }});
-
-        ModSettingsMod.RegisterTranslationKey(ModId, EnabledLocKey, new Dictionary<string, string>() {
-            { "en-us", "ENABLED" }, { "pl-pl", "WŁĄCZONE" }, { "de-de", "AKTIVIERT" }, { "ru-ru", "ВКЛЮЧЕНО" }, { "fr-fr", "ACTIVÉ" }, { "it-it", "ABILITATO" }, { "es-es", "ACTIVADO" },
-            { "es-mx", "ACTIVADO" }, { "pt-br", "ATIVADO" }, { "zh-cn", "已启用" }, { "ja-jp", "有効" }, { "ko-kr", "활성화됨" }});
-
-        ModSettingsMod.RegisterTranslationKey(ModId, DisabledLocKey, new Dictionary<string, string>() {
-            { "en-us", "DISABLED" }, { "pl-pl", "WYŁĄCZONE" }, { "de-de", "DEAKTIVIERT" }, { "ru-ru", "ОТКЛЮЧЕНО" }, { "fr-fr", "DÉSACTIVÉ" }, { "it-it", "DISABILITATO" }, { "es-es", "DESACTIVADO" },
-            { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }});
-
-        Log("Translations Registered");
     }
 
     private static object GetCurrentEnablePremiumifyValue()

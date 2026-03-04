@@ -83,32 +83,32 @@ public class ModSettingsTest : MelonMod
 
         RegisterTranslations();
 
-        var switcher1Options = new List<Tuple<string, Func<string>>>
+        var switcher1Options = new List<string>
         {
-            Tuple.Create("s1_opt1", () => S1Opt1LocKey),
-            Tuple.Create("s1_opt2", () => S1Opt2LocKey),
-            Tuple.Create("s1_opt3", () => S1Opt3LocKey)
+            S1Opt1LocKey,
+            S1Opt2LocKey,
+            S1Opt3LocKey
         };
         ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher1LocKey, switcher1Options,
             GetCurrentSwitcher1Value, OnSwitcher1ChangedInUI, HasPendingSwitcher1Changes, ApplyPendingSwitcher1Changes, RevertPendingSwitcher1Changes);
 
-        var switcher2Options = new List<Tuple<string, Func<string>>>
+        var switcher2Options = new List<string>
         {
-            Tuple.Create("s2_opt1", () => S2Opt1LocKey),
-            Tuple.Create("s2_opt2", () => S2Opt2LocKey),
-            Tuple.Create("s2_opt3", () => S2Opt3LocKey),
-            Tuple.Create("s2_opt4", () => S2Opt4LocKey)
+            S2Opt1LocKey,
+            S2Opt2LocKey,
+            S2Opt3LocKey,
+            S2Opt4LocKey
         };
         ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher2LocKey, switcher2Options,
             GetCurrentSwitcher2Value, OnSwitcher2ChangedInUI, HasPendingSwitcher2Changes, ApplyPendingSwitcher2Changes, RevertPendingSwitcher2Changes);
 
-        var switcher3Options = new List<Tuple<string, Func<string>>>
+        var switcher3Options = new List<string>
         {
-            Tuple.Create("s3_opt1", () => S3Opt1LocKey),
-            Tuple.Create("s3_opt2", () => S3Opt2LocKey),
-            Tuple.Create("s3_opt3", () => S3Opt3LocKey),
-            Tuple.Create("s3_opt4", () => S3Opt4LocKey),
-            Tuple.Create("s3_opt5", () => S3Opt5LocKey)
+            S3Opt1LocKey,
+            S3Opt2LocKey,
+            S3Opt3LocKey,
+            S3Opt4LocKey,
+            S3Opt5LocKey
         };
         ModSettingsMod.RegisterSwitcherSetting(ModId, Switcher3LocKey, switcher3Options,
             GetCurrentSwitcher3Value, OnSwitcher3ChangedInUI, HasPendingSwitcher3Changes, ApplyPendingSwitcher3Changes, RevertPendingSwitcher3Changes);
@@ -116,10 +116,10 @@ public class ModSettingsTest : MelonMod
         for (int i = 0; i < 10; i++)
         {
             int local_i = i;
-            var additionalSwitcherOptions = new List<Tuple<string, Func<string>>>
+            var additionalSwitcherOptions = new List<string>
             {
-                Tuple.Create($"add_s{local_i + 1}_opt_a", () => AdditionalOptALocKey),
-                Tuple.Create($"add_s{local_i + 1}_opt_b", () => AdditionalOptBLocKey)
+                AdditionalOptALocKey,
+                AdditionalOptBLocKey
             };
 
             ModSettingsMod.RegisterSwitcherSetting(ModId,
