@@ -13,11 +13,8 @@ namespace Premiumify;
 public class PremiumifyMod : MelonMod
 {
     private static MelonLogger.Instance staticLogger;
-    internal static MelonPreferences_Category premiumifyCategory;
     internal static MelonPreferences_Entry<bool> isPremiumifyEnabledPref;
-    private static bool? _pendingEnablePremiumifyValue;
     private static bool _isGameplaySceneCurrentlyActive = false;
-
     internal const string ModId = "Premiumify";
 
     [Conditional("DEBUG")] internal static void Log(string m) => staticLogger?.Msg($"[{ModId}] {m}");
@@ -29,8 +26,7 @@ public class PremiumifyMod : MelonMod
         Log("Init");
         try
         {
-            premiumifyCategory = MelonPreferences.CreateCategory(ModId);
-            isPremiumifyEnabledPref = premiumifyCategory.CreateEntry("EnablePremiumify", true);
+            isPremiumifyEnabledPref = MelonPreferences.CreateCategory(ModId).CreateEntry("EnablePremiumify", true);
             Log("Prefs Loaded");
         }
         catch (Exception e) { LogError("Prefs Init Error", e); }
@@ -50,6 +46,7 @@ public class PremiumifyMod : MelonMod
                 { "es-mx", "DESACTIVADO" }, { "pt-br", "DESATIVADO" }, { "zh-cn", "已禁用" }, { "ja-jp", "無効" }, { "ko-kr", "비활성화됨" }}),
         };
 
+        bool? _pendingEnablePremiumifyValue = null;
         ModSettingsMod.RegisterSwitcherSetting(
             ModId,
             settingTranslationKey,
