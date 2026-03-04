@@ -27,6 +27,8 @@
     <Reference Include="MelonLoader">
       <HintPath>$(GwentRoot)\MelonLoader\net6\MelonLoader.dll</HintPath>
     </Reference>
+		
+	<EmbeddedResource Include="BoardTranslations.json" />
   </ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

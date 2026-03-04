@@ -2,7 +2,10 @@
 using System.Reflection;
 using System.Text.Json;
 
-// embeds the file from build in the DLL
+// embeds the file from build in the DLL, use following code snippet in .csproj to include the file as embedded resource
+// <ItemGroup>
+//  < EmbeddedResource Include = "translations.json" />
+// </ItemGroup >
 internal sealed class EmbeddedFileTranslationProvider : TranslationProviderBase
 {
     private readonly Dictionary<string, Dictionary<string, string>> _translations;
