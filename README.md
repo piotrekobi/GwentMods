@@ -10,6 +10,7 @@ A collection of [MelonLoader](https://github.com/LavaGang/MelonLoader) mods for 
 | [**Premiumify**](#premiumify) | Force all cards to render as premium during gameplay |
 | [**ModSettings**](#modsettings) | Framework for adding a "MODS" tab to the in-game Settings panel |
 | [**ModSettingsTest**](#modsettingstest) | Example mod that demonstrates the ModSettings API |
+| [**Boardify**](#boardify) | Allows you to use any board with any deck |
 
 ## Prerequisites
 
@@ -21,11 +22,14 @@ A collection of [MelonLoader](https://github.com/LavaGang/MelonLoader) mods for 
 
 ### Project References
 
-All `.csproj` files reference assemblies from the local MelonLoader installation. You'll need to update the `<HintPath>` entries if your Gwent installation is in a different location:
+All `.csproj` files reference assemblies from the local MelonLoader installation. You'll need to add Directory.Build.props file to root folder with such content:
 ```
-{GameDir}\MelonLoader\
-├── net6\                  # MelonLoader.dll, 0Harmony.dll, Il2CppInterop.Runtime.dll
-└── Il2CppAssemblies\      # Il2Cpp-generated game assemblies
+<Project>
+  <PropertyGroup>
+    <-- Your Gwent path here -->
+    <GwentRoot>C:\Program Files (x86)\GOG Galaxy\Games\Gwent</GwentRoot>
+  </PropertyGroup>
+</Project>
 ```
 
 Built DLLs are automatically copied to `{GameDir}\Mods\` via PostBuild targets in each `.csproj`.
@@ -105,6 +109,25 @@ The mod only activates during the Gameplay scene — deck builder, collection, a
 
 ---
 
+## Boardify
+
+A gameplay mod that allows you to pick any existing field and use it with any of your decks.
+
+Can be toggled on/off via the in-game Settings panel (requires ModSettings).
+Fields should be changed via in-game Settings panel (requires ModSettings).
+
+### How It Works
+
+The mod hooks into the board loading process and overrides the active board based on the user’s saved preference:
+
+| Hook | Purpose |
+|------|---------|
+| `BoardLoader.LoadBoard (Prefix)` | Checks the saved CurrentBoard preference and, if the mod is enabled, forces the BoardArtDefinition.ArtId to match the selected board. |
+
+The mod works for both main menu and gameplay scenes. Reloading a board requires getting into the game, changing deck board, or closing and reopening current main menu scene.
+
+---
+
 ## ModSettings
 
 A framework mod that adds a **"MODS"** tab to Gwent's in-game Settings panel. Other mods can register settings (currently switcher/dropdown controls) that appear in this tab, with full localization support, save/revert behavior, and integration with the game's existing UI flow.
@@ -143,7 +166,6 @@ Create a `MelonPreferences` category and entries for your settings. These persis
 public class MyMod : MelonMod
 {
     // Preference storage
-    static MelonPreferences_Category _category;
     static MelonPreferences_Entry<string> _difficultyPref;
 
     // Pending value (tracks unsaved UI changes)
@@ -152,8 +174,7 @@ public class MyMod : MelonMod
     public override void OnInitializeMelon()
     {
         // Create preferences (saved to UserData/MelonPreferences.cfg)
-        _category = MelonPreferences.CreateCategory("MyMod");
-        _difficultyPref = _category.CreateEntry("Difficulty", "normal");
+        _difficultyPref = MelonPreferences.CreateCategory("MyMod").CreateEntry("Difficulty", "normal");
         // _difficultyPref.Value is now "normal" on first run,
         // or whatever the user last saved
 
@@ -197,9 +218,9 @@ void RegisterSettings()
     // Define options: List of (id, localization key getter)
     var options = new List<Tuple<string, Func<string>>>
     {
-        Tuple.Create("easy",   (Func<string>)(() => "mymod_diff_easy")),
-        Tuple.Create("normal", (Func<string>)(() => "mymod_diff_normal")),
-        Tuple.Create("hard",   (Func<string>)(() => "mymod_diff_hard")),
+        Tuple.Create("easy",   () => "mymod_diff_easy"),
+        Tuple.Create("normal", () => "mymod_diff_normal"),
+        Tuple.Create("hard",   () => "mymod_diff_hard"),
     };
 
     ModSettings.ModSettings.RegisterSwitcherSetting(

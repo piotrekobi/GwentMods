@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.13.35913.81
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomPremiums", "CustomPremiums\CustomPremiums.csproj", "{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}"
 EndProject
@@ -10,6 +10,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModSettings", "ModSettings\ModSettings.csproj", "{EB19BE1A-8216-4581-933A-3542DC307E49}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModSettingsTest", "ModSettingsTest\ModSettingsTest.csproj", "{231C0661-F32B-4746-BA20-46288F6A6F36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Boardify", "Boardify\Boardify.csproj", "{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B4771691-EFFD-418D-A199-E8E5B290A045}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,11 +27,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Debug|x64.ActiveCfg = Debug|x64
 		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Debug|x64.Build.0 = Debug|x64
 		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Release|x64.ActiveCfg = Release|x64
 		{A1B2C3D4-E5F6-4789-ABCD-EF0123456789}.Release|x64.Build.0 = Release|x64
 		{13C5EE3B-920B-45FD-AAF2-58F6A89A0550}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -51,6 +56,14 @@ Global
 		{231C0661-F32B-4746-BA20-46288F6A6F36}.Release|Any CPU.Build.0 = Release|Any CPU
 		{231C0661-F32B-4746-BA20-46288F6A6F36}.Release|x64.ActiveCfg = Release|x64
 		{231C0661-F32B-4746-BA20-46288F6A6F36}.Release|x64.Build.0 = Release|x64
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Debug|x64.ActiveCfg = Debug|x64
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Debug|x64.Build.0 = Debug|x64
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Release|x64.ActiveCfg = Release|Any CPU
+		{81FE07E3-E43C-4B88-A909-7F4C0BCD8CFA}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
