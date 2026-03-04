@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text.Json;
 
-// embeds the file in the DLL
+// embeds the file from build in the DLL
 internal sealed class EmbeddedFileTranslationProvider : TranslationProviderBase
 {
     private readonly Dictionary<string, Dictionary<string, string>> _translations;
