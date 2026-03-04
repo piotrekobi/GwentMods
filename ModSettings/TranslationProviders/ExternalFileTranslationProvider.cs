@@ -1,24 +1,25 @@
-﻿using Boardify;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 
 
 // uses external file in the same folder as DLL on the runtime
-internal sealed class FileTranslationProvider : TranslationProviderBase
+namespace ModSettings.TranslationProviders;
+
+public sealed class ExternalFileTranslationProvider : TranslationProviderBase
 {
     private readonly Dictionary<string, Dictionary<string, string>> _translations;
 
     // Constructor now only takes the file name (e.g., "BoardTranslations.json")
-    public FileTranslationProvider(string fileName)
+    public ExternalFileTranslationProvider(string fileNameInDirectory)
     {
-        if (string.IsNullOrWhiteSpace(fileName))
+        if (string.IsNullOrWhiteSpace(fileNameInDirectory))
         {
             _translations = new Dictionary<string, Dictionary<string, string>>();
             return;
         }
 
         // Compute full path relative to the DLL location
-        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, fileName);
+        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, fileNameInDirectory);
 
         if (!File.Exists(filePath))
         {

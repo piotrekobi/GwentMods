@@ -299,6 +299,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="TranslationProviders\EmbeddedFileTranslationProvider.cs" />
+		<Compile Include="TranslationProviders\ExternalFileTranslationProvider.cs" />
+		<Compile Include="TranslationProviders\InlineTranslationProvider.cs" />
+		<Compile Include="TranslationProviders\ITranslationProvider.cs" />
+		<Compile Include="TranslationProviders\TranslationProviderBase.cs" />
 		<Compile Include="ModSettings.cs" />
 	</ItemGroup>
 	
