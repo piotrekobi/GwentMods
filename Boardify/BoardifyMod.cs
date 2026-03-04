@@ -30,7 +30,9 @@ public class BoardifyMod : MelonMod
         string? pendingEnable = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Enabled_Translation", translationProvider.GetTranslations("Boardify_Enabled_Translation")),
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Label", new Dictionary<string, string> {
+                { "en-us", "Boardify" }, { "pl-pl", "Boardify" }, { "de-de", "Boardify" }, { "ru-ru", "Бордификация" }, { "fr-fr", "Boardify" }, { "it-it", "Boardify" },
+                { "es-es", "Boardify" }, { "es-mx", "Boardify" }, { "pt-br", "Boardify" }, { "zh-cn", "棋盘化" }, { "ja-jp", "ボード化" }, { "ko-kr", "보드화" } }),
             switcherOptions: new List<string> { 
                 ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslations(true.ToString())),
                 ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslations(false.ToString())) 
