@@ -51,14 +51,15 @@ public class HideStarterDecksMod : MelonMod
             modId: ModId,
             settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "DeckGuideRedirect_Enabled_Translation", translationProvider.GetTranslationsFor("DeckGuideRedirect_Enabled_Translation")),
             switcherOptions: new List<string> {
-                ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslationsFor(true.ToString())),
-                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslationsFor(false.ToString()))
+                ModSettingsMod.RegisterTranslationKey(ModId, "Redirect", translationProvider.GetTranslationsFor("DeckGuide_Redirect_Translation")),
+                ModSettingsMod.RegisterTranslationKey(ModId, "Hidden", translationProvider.GetTranslationsFor("DeckGuide_Hidden_Translation"))
             },
-            getCurrentValue: () => guideRedirectEnabledPreference.Value.ToString(),
-            onValueChangedCallback: val => pendingValue = val as string != guideRedirectEnabledPreference.Value.ToString() ? val as string : null,
+            getCurrentValue: () => guideRedirectEnabledPreference.Value ? "Redirect" : "Hidden",
+            onValueChangedCallback: val => pendingValue = val as string != (guideRedirectEnabledPreference.Value ? "Redirect" : "Hidden") ? val as string : null,
             hasPendingChangesCallback: () => pendingValue != null,
-            applyPendingChangesCallback: () => { if (pendingValue != null) { guideRedirectEnabledPreference.Value = bool.Parse(pendingValue); pendingValue = null; } },
-            revertPendingChangesCallback: () => pendingValue = null);
+            applyPendingChangesCallback: () => { if (pendingValue != null) { guideRedirectEnabledPreference.Value = pendingValue == "Redirect"; pendingValue = null; } },
+            revertPendingChangesCallback: () => pendingValue = null
+        );
     }
 }
 
