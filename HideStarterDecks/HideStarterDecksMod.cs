@@ -20,7 +20,7 @@ public class HideStarterDecksMod : MelonMod
     {
         isModEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("Enabled", true);
         guideRedirectEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("DeckGuideRedirect", true);
-        guideRedirectURLPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("DeckGuideURL", "https://www.playgwent.com/en/decks");
+        guideRedirectURLPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("RedirectURL", "https://www.playgwent.com/en/decks");
         var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "HideStarterDecks.Translations.json");
         RegisterHideStarterSettingsSwitch(translationProvider);
         RegisterDeckGuideRedirectSwitch(translationProvider);
