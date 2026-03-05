@@ -4,13 +4,13 @@
 
 namespace ModSettings.TranslationProviders;
 
-public abstract class TranslationProviderBase : ITranslationProvider
+public abstract class TranslationProvider
 {
-    protected abstract Dictionary<string, string>? TryGetTranslations(string key);
+    protected abstract Dictionary<string, string>? TryGetTranslationsFor(string key);
 
-    public Dictionary<string, string> GetTranslations(string key)
+    public Dictionary<string, string> GetTranslationsFor(string key)
     {
-        var translations = TryGetTranslations(key);
+        var translations = TryGetTranslationsFor(key);
         var dummy = CreateDummyTranslations(key);
 
         // If nothing found, return a full dummy set

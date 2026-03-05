@@ -301,9 +301,10 @@
 	<ItemGroup>
 		<Compile Include="TranslationProviders\EmbeddedFileTranslationProvider.cs" />
 		<Compile Include="TranslationProviders\ExternalFileTranslationProvider.cs" />
-		<Compile Include="TranslationProviders\InlineTranslationProvider.cs" />
-		<Compile Include="TranslationProviders\ITranslationProvider.cs" />
-		<Compile Include="TranslationProviders\TranslationProviderBase.cs" />
+		<Compile Include="TranslationProviders\InlineJsonTranslationProvider.cs" />
+		<Compile Include="TranslationProviders\NoTranslationProvider.cs" />
+		<Compile Include="TranslationProviders\ParseStringTranslationProvider.cs" />
+		<Compile Include="TranslationProviders\TranslationProvider.cs" />
 		<Compile Include="ModSettingsMod.cs" />
 	</ItemGroup>
 	

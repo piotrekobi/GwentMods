@@ -4,6 +4,7 @@ using Il2CppGwentVisuals;
 using MelonLoader;
 using ModSettings;
 using System.Diagnostics;
+using ModSettings.TranslationProviders;
 
 [assembly: MelonInfo(typeof(Premiumify.PremiumifyMod), "Premiumify", "1.0.0", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
