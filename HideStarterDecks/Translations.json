@@ -1,17 +1,17 @@
 {
-  "Mod_Enabled_Translation": {
-    "en-us": "Mod Enabled",
-    "pl-pl": "Mod Włączony",
-    "de-de": "Mod Aktiviert",
-    "ru-ru": "Mod Включён",
-    "fr-fr": "Mod Activé",
-    "it-it": "Mod Abilitato",
-    "es-es": "Mod Activado",
-    "es-mx": "Mod Activado",
-    "pt-br": "Mod Ativado",
-    "zh-cn": "Mod 已启用",
-    "ja-jp": "Mod 有効",
-    "ko-kr": "Mod 활성화됨"
+  "HideStarterDecks_Enabled_Translation": {
+    "en-us": "Hide Starter Decks",
+    "pl-pl": "Ukryj Początkowe Talie",
+    "de-de": "Starterdecks Ausblenden",
+    "ru-ru": "Скрыть стартовые колоды",
+    "fr-fr": "Masquer les decks de départ",
+    "it-it": "Nascondi Mazzi Iniziali",
+    "es-es": "Ocultar mazos iniciales",
+    "es-mx": "Ocultar mazos iniciales",
+    "pt-br": "Ocultar Baralhos Iniciais",
+    "zh-cn": "隐藏起始牌组",
+    "ja-jp": "スターターデッキを非表示",
+    "ko-kr": "초기 덱 숨기기"
   },
   "True": {
     "en-us": "ENABLED",

@@ -15,7 +15,7 @@ public class ExampleMod : MelonMod
     public override void OnInitializeMelon()
     {
         isModEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("Enabled", true);
-        var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "Translations.json");
+        var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "ExampleMod.Translations.json");
         RegisterEnableSwitch(translationProvider);
         HarmonyInstance.PatchAll();
     }

@@ -1,7 +1,7 @@
-﻿using MelonLoader;
+﻿using HarmonyLib;
+using MelonLoader;
 using ModSettings;
 using ModSettings.TranslationProviders;
-
 
 [assembly: MelonInfo(typeof(HideStarterDecks.HideStarterDecksMod), "HideStarterDecks", "1.0.0", "Author")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -15,7 +15,7 @@ public class HideStarterDecksMod : MelonMod
     public override void OnInitializeMelon()
     {
         isModEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("Enabled", true);
-        var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "Translations.json");
+        var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "HideStarterDecks.Translations.json");
         RegisterEnableSwitch(translationProvider);
         HarmonyInstance.PatchAll();
     }
@@ -25,7 +25,7 @@ public class HideStarterDecksMod : MelonMod
         string? pendingEnable = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Mod_Enabled_Translation", translationProvider.GetTranslationsFor("Mod_Enabled_Translation")),
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "HideStarterDecks_Enabled_Translation", translationProvider.GetTranslationsFor("HideStarterDecks_Enabled_Translation")),
             switcherOptions: new List<string> {
                 ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslationsFor(true.ToString())),
                 ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslationsFor(false.ToString()))
@@ -38,4 +38,23 @@ public class HideStarterDecksMod : MelonMod
     }
 }
 
-// HARMONY PATCHES HERE
+[HarmonyPatch(typeof(Il2CppGwentVisuals.CollectionData), "GetDeckList")]
+public static class Patch_HideStarterDecks
+{
+    [HarmonyPostfix]
+    public static void Postfix_GetDeckList(ref Il2CppSystem.Collections.Generic.List<Il2CppGwentVisuals.CollectionDeck> __result)
+    {
+        if (!HideStarterDecksMod.isModEnabledPreference.Value || __result == null)
+            return;
+
+        var filtered = new Il2CppSystem.Collections.Generic.List<Il2CppGwentVisuals.CollectionDeck>();
+        for (int i = 0; i < __result.Count; i++)
+        {
+            var deck = __result[i];
+            if (!deck.IsStarterDeck)
+                filtered.Add(deck);
+        }
+
+        __result = filtered;
+    }
+}       
