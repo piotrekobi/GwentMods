@@ -32,7 +32,7 @@ public class PremiumifyMod : MelonMod
         catch (Exception e) { LogError("Prefs Init Error", e); }
 
         var settingTranslationKey = ModSettingsMod.RegisterTranslationKey(ModId, "Premiumify_Enabled_Switch", new Dictionary<string, string>() {
-            { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" }, 
+            { "en-us", "Premiumify" }, { "pl-pl", "Premiumify" }, { "de-de", "Premiumify" }, { "ru-ru", "Премиумификация" }, { "fr-fr", "Premiumify" }, { "it-it", "Premiumify" },
             { "es-es", "Premiumify" }, { "es-mx", "Premiumify" }, { "pt-br", "Premiumify" }, { "zh-cn", "闪卡化" }, { "ja-jp", "プレミアム化" }, { "ko-kr", "프리미엄화" }});
 
         var switcherOptions = new List<string>

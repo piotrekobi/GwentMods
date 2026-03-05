@@ -9,7 +9,7 @@ namespace ModSettings.TranslationProviders;
 // <ItemGroup>
 //  < EmbeddedResource Include = "translations.json" />
 // </ItemGroup >
-public sealed class EmbeddedFileTranslationProvider : TranslationProviderBase
+public sealed class EmbeddedFileTranslationProvider : TranslationProvider
 {
     private readonly Dictionary<string, Dictionary<string, string>> _translations;
 
@@ -31,7 +31,7 @@ public sealed class EmbeddedFileTranslationProvider : TranslationProviderBase
         ) ?? new Dictionary<string, Dictionary<string, string>>();
     }
 
-    protected override Dictionary<string, string>? TryGetTranslations(string key)
+    protected override Dictionary<string, string>? TryGetTranslationsFor(string key)
     {
         return _translations.TryGetValue(key, out var value) ? value : null;
     }

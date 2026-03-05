@@ -4,11 +4,11 @@
 
 namespace ModSettings.TranslationProviders;
 
-public sealed class InlineTranslationProvider : TranslationProviderBase
+public sealed class InlineJsonTranslationProvider : TranslationProvider
 {
     private readonly Dictionary<string, Dictionary<string, string>> _translations;
 
-    public InlineTranslationProvider(string json)
+    public InlineJsonTranslationProvider(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -22,7 +22,7 @@ public sealed class InlineTranslationProvider : TranslationProviderBase
         ) ?? new Dictionary<string, Dictionary<string, string>>();
     }
 
-    protected override Dictionary<string, string>? TryGetTranslations(string key)
+    protected override Dictionary<string, string>? TryGetTranslationsFor(string key)
     {
         return _translations.TryGetValue(key, out var value) ? value : null;
     }
