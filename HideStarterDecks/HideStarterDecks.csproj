@@ -27,6 +27,12 @@
 		<Reference Include="MelonLoader">
 			<HintPath>$(GwentRoot)\MelonLoader\net6\MelonLoader.dll</HintPath>
 		</Reference>
+		<Reference Include="UnityEngine">
+		  <HintPath>..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+		  <HintPath>..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Gwent\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
 
 		<EmbeddedResource Include="Translations.json" />
 	</ItemGroup>
