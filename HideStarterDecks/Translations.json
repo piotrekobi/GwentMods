@@ -13,6 +13,20 @@
     "ja-jp": "スターターデッキを非表示",
     "ko-kr": "초기 덱 숨기기"
   },
+  "DeckGuideRedirect_Enabled_Translation": {
+    "en-us": "Deck Guides Button Redirect",
+    "pl-pl": "Przekierowanie przycisku przewodnika po talii",
+    "de-de": "Weiterleitung des Deck-Guide-Buttons",
+    "ru-ru": "Перенаправление кнопки руководств",
+    "fr-fr": "Redirection du bouton du guide de deck",
+    "it-it": "Reindirizzamento del pulsante Guida Mazzo",
+    "es-es": "Redirección del botón del guía de mazo",
+    "es-mx": "Redirección del botón del guía de mazo",
+    "pt-br": "Redirecionamento do botão do guia do deck",
+    "zh-cn": "牌组指南按钮跳转",
+    "ja-jp": "デッキガイドボタンのリダイレクト",
+    "ko-kr": "덱 가이드 버튼 이동"
+  },
   "True": {
     "en-us": "ENABLED",
     "pl-pl": "WŁĄCZONE",

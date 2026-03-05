@@ -13,16 +13,21 @@ public class HideStarterDecksMod : MelonMod
 {
     private const string ModId = "HideStarterDecksMod";
     internal static MelonPreferences_Entry<bool> isModEnabledPreference = null!;
+    internal static MelonPreferences_Entry<bool> guideRedirectEnabledPreference = null!;
+    internal static MelonPreferences_Entry<string> guideRedirectURLPreference = null!;
 
     public override void OnInitializeMelon()
     {
         isModEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("Enabled", true);
+        guideRedirectEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("DeckGuideRedirect", true);
+        guideRedirectURLPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("DeckGuideURL", "https://www.playgwent.com/en/decks");
         var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "HideStarterDecks.Translations.json");
-        RegisterEnableSwitch(translationProvider);
+        RegisterHideStarterSettingsSwitch(translationProvider);
+        RegisterDeckGuideRedirectSwitch(translationProvider);
         HarmonyInstance.PatchAll();
     }
 
-    private static void RegisterEnableSwitch(TranslationProvider translationProvider)
+    private static void RegisterHideStarterSettingsSwitch(TranslationProvider translationProvider)
     {
         string? pendingEnable = null;
         ModSettingsMod.RegisterSwitcherSetting(
@@ -37,6 +42,23 @@ public class HideStarterDecksMod : MelonMod
             hasPendingChangesCallback: () => pendingEnable != null, // are there unsaved changes?
             applyPendingChangesCallback: () => { if (pendingEnable != null) { isModEnabledPreference.Value = bool.Parse(pendingEnable); pendingEnable = null; } }, // user clicked Save
             revertPendingChangesCallback: () => pendingEnable = null); // user clicked Back/Cancel
+    }
+
+    private static void RegisterDeckGuideRedirectSwitch(TranslationProvider translationProvider)
+    {
+        string? pendingValue = null;
+        ModSettingsMod.RegisterSwitcherSetting(
+            modId: ModId,
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "DeckGuideRedirect_Enabled_Translation", translationProvider.GetTranslationsFor("DeckGuideRedirect_Enabled_Translation")),
+            switcherOptions: new List<string> {
+                ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslationsFor(true.ToString())),
+                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslationsFor(false.ToString()))
+            },
+            getCurrentValue: () => guideRedirectEnabledPreference.Value.ToString(),
+            onValueChangedCallback: val => pendingValue = val as string != guideRedirectEnabledPreference.Value.ToString() ? val as string : null,
+            hasPendingChangesCallback: () => pendingValue != null,
+            applyPendingChangesCallback: () => { if (pendingValue != null) { guideRedirectEnabledPreference.Value = bool.Parse(pendingValue); pendingValue = null; } },
+            revertPendingChangesCallback: () => pendingValue = null);
     }
 }
 
@@ -70,8 +92,15 @@ public static class Patch_DeckGuideRedirect
     [HarmonyPrefix]
     public static bool Prefix_HandleDeckGuideButtonClicked()
     {
-        UnityEngine.Application.OpenURL("https://your.custom.url"); // Open your own URL instead
-        return false; // Skip original method
+        if (HideStarterDecksMod.guideRedirectEnabledPreference.Value)
+        {
+            UnityEngine.Application.OpenURL(HideStarterDecksMod.guideRedirectURLPreference.Value); // Redirect
+        }
+        else
+        {
+            return true; // Let original method run (or could optionally hide it via UXManager patch)
+        }
+        return false; // Skip original method if redirecting
     }
 }
 
@@ -85,7 +114,8 @@ public static class Patch_BlockDeckGuide
         // __0 means the first parameter
         if (__0 == (int)EUXContentId.MainMenu_DeckSelection_DeckGuideButton)
         {
-            __result = true; // Pretend it’s hidden
+            if (!HideStarterDecksMod.guideRedirectEnabledPreference.Value) // Only hide if redirect is disabled
+                __result = true;
         }
     }
 }
