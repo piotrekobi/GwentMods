@@ -13,6 +13,20 @@
     "ja-jp": "現在のボード",
     "ko-kr": "현재 보드"
   },
+  "Boardify_Enabled_Translation": {
+    "en-us": "Boardify Enabled",
+    "pl-pl": "Boardify Włączony",
+    "de-de": "Boardify Aktiviert",
+    "ru-ru": "Boardify Включён",
+    "fr-fr": "Boardify Activé",
+    "it-it": "Boardify Abilitato",
+    "es-es": "Boardify Activado",
+    "es-mx": "Boardify Activado",
+    "pt-br": "Boardify Ativado",
+    "zh-cn": "Boardify 已启用",
+    "ja-jp": "Boardify 有効",
+    "ko-kr": "Boardify 활성화됨"
+  },
   "True": {
     "en-us": "ENABLED",
     "pl-pl": "WŁĄCZONE",

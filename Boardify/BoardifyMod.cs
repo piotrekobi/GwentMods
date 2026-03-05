@@ -30,12 +30,10 @@ public class BoardifyMod : MelonMod
         string? pendingEnable = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Label", new Dictionary<string, string> {
-                { "en-us", "Boardify" }, { "pl-pl", "Boardify" }, { "de-de", "Boardify" }, { "ru-ru", "Бордификация" }, { "fr-fr", "Boardify" }, { "it-it", "Boardify" },
-                { "es-es", "Boardify" }, { "es-mx", "Boardify" }, { "pt-br", "Boardify" }, { "zh-cn", "棋盘化" }, { "ja-jp", "ボード化" }, { "ko-kr", "보드화" } }),
-            switcherOptions: new List<string> {
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Enabled_Translation", translationProvider.GetTranslationsFor("Boardify_Enabled_Translation")),
+            switcherOptions: new List<string> { 
                 ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslationsFor(true.ToString())),
-                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslationsFor(false.ToString()))
+                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslationsFor(false.ToString())) 
             },
             getCurrentValue: () => isModEnabledPreference.Value.ToString(), // currently saved value
             onValueChangedCallback: val => pendingEnable = val as string != isModEnabledPreference.Value.ToString() ? val as string : null, // user changed the switcher in UI
