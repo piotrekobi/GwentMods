@@ -4,6 +4,7 @@ using Il2CppGwentVisuals.UX;
 using MelonLoader;
 using ModSettings;
 using ModSettings.TranslationProviders;
+using System.Diagnostics;
 
 [assembly: MelonInfo(typeof(HideStarterDecks.HideStarterDecksMod), "HideStarterDecks", "1.0.0", "Author")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
@@ -69,7 +70,7 @@ public static class Patch_HideStarterDecks
     [HarmonyPostfix]
     public static void Postfix_GetDeckList(ref Il2CppSystem.Collections.Generic.List<Il2CppGwentVisuals.CollectionDeck> __result)
     {
-        MelonLogger.Msg("Postfix_GetDeckList called");
+        DebugMsg("Postfix_GetDeckList called");
         if (!HideStarterDecksMod.isModEnabledPreference.Value || __result == null)
             return;
 
@@ -80,9 +81,15 @@ public static class Patch_HideStarterDecks
             if (!deck.IsStarterDeck)
                 filtered.Add(deck);
         }
-        MelonLogger.Msg("Deck filtering complete");
+        DebugMsg("Deck filtering complete");
 
         __result = filtered;
+    }
+
+    [Conditional("DEBUG")]
+    private static void DebugMsg(string message)
+    {
+        MelonLogger.Msg(message);
     }
 }
 
