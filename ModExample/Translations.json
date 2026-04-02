@@ -1,0 +1,44 @@
+{
+  "Mod_Enabled_Translation": {
+    "en-us": "Mod Enabled",
+    "pl-pl": "Mod Włączony",
+    "de-de": "Mod Aktiviert",
+    "ru-ru": "Mod Включён",
+    "fr-fr": "Mod Activé",
+    "it-it": "Mod Abilitato",
+    "es-es": "Mod Activado",
+    "es-mx": "Mod Activado",
+    "pt-br": "Mod Ativado",
+    "zh-cn": "Mod 已启用",
+    "ja-jp": "Mod 有効",
+    "ko-kr": "Mod 활성화됨"
+  },
+  "True": {
+    "en-us": "ENABLED",
+    "pl-pl": "WŁĄCZONE",
+    "de-de": "AKTIVIERT",
+    "ru-ru": "ВКЛЮЧЕНО",
+    "fr-fr": "ACTIVÉ",
+    "it-it": "ABILITATO",
+    "es-es": "ACTIVADO",
+    "es-mx": "ACTIVADO",
+    "pt-br": "ATIVADO",
+    "zh-cn": "已启用",
+    "ja-jp": "有効",
+    "ko-kr": "활성화됨"
+  },
+  "False": {
+    "en-us": "DISABLED",
+    "pl-pl": "WYŁĄCZONE",
+    "de-de": "DEAKTIVIERT",
+    "ru-ru": "ОТКЛЮЧЕНО",
+    "fr-fr": "DÉSACTIVÉ",
+    "it-it": "DISABILITATO",
+    "es-es": "DESACTIVADO",
+    "es-mx": "DESACTIVADO",
+    "pt-br": "DESATIVADO",
+    "zh-cn": "已禁用",
+    "ja-jp": "無効",
+    "ko-kr": "비활성화됨"
+  }
+}

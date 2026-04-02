@@ -6,7 +6,7 @@ using System.Text.Json;
 // uses external file in the same folder as DLL on the runtime
 namespace ModSettings.TranslationProviders;
 
-public sealed class ExternalFileTranslationProvider : TranslationProviderBase
+public sealed class ExternalFileTranslationProvider : TranslationProvider
 {
     private readonly Dictionary<string, Dictionary<string, string>> _translations;
 
@@ -36,7 +36,7 @@ public sealed class ExternalFileTranslationProvider : TranslationProviderBase
         ) ?? new Dictionary<string, Dictionary<string, string>>();
     }
 
-    protected override Dictionary<string, string>? TryGetTranslations(string key)
+    protected override Dictionary<string, string>? TryGetTranslationsFor(string key)
     {
         return _translations.TryGetValue(key, out var value) ? value : null;
     }

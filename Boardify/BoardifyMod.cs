@@ -25,15 +25,15 @@ public class BoardifyMod : MelonMod
         HarmonyInstance.PatchAll();
     }
 
-    private static void RegisterEnableSwitch(ITranslationProvider translationProvider)
+    private static void RegisterEnableSwitch(TranslationProvider translationProvider)
     {
         string? pendingEnable = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Enabled_Translation", translationProvider.GetTranslations("Boardify_Enabled_Translation")),
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Enabled_Translation", translationProvider.GetTranslationsFor("Boardify_Enabled_Translation")),
             switcherOptions: new List<string> { 
-                ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslations(true.ToString())),
-                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslations(false.ToString())) 
+                ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslationsFor(true.ToString())),
+                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslationsFor(false.ToString())) 
             },
             getCurrentValue: () => isModEnabledPreference.Value.ToString(), // currently saved value
             onValueChangedCallback: val => pendingEnable = val as string != isModEnabledPreference.Value.ToString() ? val as string : null, // user changed the switcher in UI
@@ -42,17 +42,17 @@ public class BoardifyMod : MelonMod
             revertPendingChangesCallback: () => pendingEnable = null); // user clicked Back/Cancel
     }
 
-    private static void RegisterAllBoards(ITranslationProvider translationProvider)
+    private static void RegisterAllBoards(TranslationProvider translationProvider)
     {
         var switcherOptions = new List<string>();
         foreach (BoardId board in Enum.GetValues(typeof(BoardId)))
         {
-            switcherOptions.Add(ModSettingsMod.RegisterTranslationKey(ModId, board.ToString(), translationProvider.GetTranslations(board.ToString())));
+            switcherOptions.Add(ModSettingsMod.RegisterTranslationKey(ModId, board.ToString(), translationProvider.GetTranslationsFor(board.ToString())));
         }
         string? pendingBoard = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
-            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Current_Board_Translation", translationProvider.GetTranslations("Current_Board_Translation")),
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Current_Board_Translation", translationProvider.GetTranslationsFor("Current_Board_Translation")),
             switcherOptions: switcherOptions,
             getCurrentValue: () => boardPreference.Value, // what's currently saved
             onValueChangedCallback: val => pendingBoard = val as string != boardPreference.Value ? val as string : null, // user changed the switcher in UI
