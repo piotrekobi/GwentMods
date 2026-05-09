@@ -1,4 +1,18 @@
 {
+  "Boardify_Enabled_Translation": {
+    "en-us": "Select Any Board",
+    "pl-pl": "Wybierz Dowolną Planszę",
+    "de-de": "Beliebiges Spielfeld Wählen",
+    "ru-ru": "Выбор Любого Поля",
+    "fr-fr": "Choisir N'importe Quel Plateau",
+    "it-it": "Seleziona Qualsiasi Tabellone",
+    "es-es": "Seleccionar Cualquier Tablero",
+    "es-mx": "Seleccionar Cualquier Tablero",
+    "pt-br": "Selecionar Qualquer Tabuleiro",
+    "zh-cn": "选择任意棋盘",
+    "ja-jp": "任意のボードを選択",
+    "ko-kr": "아무 보드나 선택"
+  },
   "Current_Board_Translation": {
     "en-us": "Current Board",
     "pl-pl": "Wybrana plansza",
@@ -12,20 +26,6 @@
     "zh-cn": "当前棋盘",
     "ja-jp": "現在のボード",
     "ko-kr": "현재 보드"
-  },
-  "Boardify_Enabled_Translation": {
-    "en-us": "Boardify Enabled",
-    "pl-pl": "Boardify Włączony",
-    "de-de": "Boardify Aktiviert",
-    "ru-ru": "Boardify Включён",
-    "fr-fr": "Boardify Activé",
-    "it-it": "Boardify Abilitato",
-    "es-es": "Boardify Activado",
-    "es-mx": "Boardify Activado",
-    "pt-br": "Boardify Ativado",
-    "zh-cn": "Boardify 已启用",
-    "ja-jp": "Boardify 有効",
-    "ko-kr": "Boardify 활성화됨"
   },
   "ENABLED": {
     "en-us": "ENABLED",
