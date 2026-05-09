@@ -27,6 +27,18 @@
 		<Reference Include="MelonLoader">
 			<HintPath>$(GwentRoot)\MelonLoader\net6\MelonLoader.dll</HintPath>
 		</Reference>
+		<Reference Include="UnityEngine">
+			<HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="Assembly-CSharp-firstpass">
+			<HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.InputLegacyModule">
+			<HintPath>$(GwentRoot)\MelonLoader\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll</HintPath>
+		</Reference>
 
 		<EmbeddedResource Include="ModTranslations.json" />
 	</ItemGroup>
