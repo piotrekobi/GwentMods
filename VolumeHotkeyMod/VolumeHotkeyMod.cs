@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
 using Il2CppGwentGameplay;
 using Il2CppGwentUnity;
+using Il2CppGwentUnity.Audio;
+using Il2CppGwentVisuals.UX;
 using MelonLoader;
 using ModSettings;
 using ModSettings.TranslationProviders;
@@ -99,22 +101,21 @@ public class VolumeHotkeyMod : MelonMod
 
     private static void SetVolume(float volume)
     {
-        var broadcaster = EventBroadcaster.Instance;
-        if (broadcaster == null)
+        var manager = SoundManager.Instance;
+        if (manager?.SettingsHandler == null)
         {
-            MelonLogger.Warning("[VolumeHotkeyMod] EventBroadcaster instance not available.");
+            MelonLogger.Warning("[VolumeHotkeyMod] SoundManager not available.");
             return;
         }
 
-        string volumeStr = volume.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
         string mode = affectedVolumesPreference.Value;
 
         if (mode == "Music" || mode == "Music+SFX" || mode == "Music+Speech" || mode == "Music+SFX+Speech")
-            broadcaster.SettingsChanged.Invoke(SettingsKey.MUSIC, volumeStr);
+            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.MusicVolume, volume);
         if (mode == "SFX" || mode == "Music+SFX" || mode == "SFX+Speech" || mode == "Music+SFX+Speech")
-            broadcaster.SettingsChanged.Invoke(SettingsKey.SFX, volumeStr);
+            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.SfxVolume, volume);
         if (mode == "Speech" || mode == "Music+Speech" || mode == "SFX+Speech" || mode == "Music+SFX+Speech")
-            broadcaster.SettingsChanged.Invoke(SettingsKey.VOICE, volumeStr);
+            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.VoicesVolume, volume);
 
         MelonLogger.Msg($"[VolumeHotkeyMod] Volume set to {volume * 100:0}% (mode: {mode})");
     }
