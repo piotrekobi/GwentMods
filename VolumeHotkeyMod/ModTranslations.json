@@ -1,19 +1,19 @@
 {
   "Mod_Enabled_Translation": {
-    "en-us": "VolumeHotkeyMod Enabled",
-    "pl-pl": "VolumeHotkeyMod Włączony",
-    "de-de": "VolumeHotkeyMod Aktiviert",
-    "ru-ru": "VolumeHotkeyMod Включён",
-    "fr-fr": "VolumeHotkeyMod Activé",
-    "it-it": "VolumeHotkeyMod Abilitato",
-    "es-es": "VolumeHotkeyMod Activado",
-    "es-mx": "VolumeHotkeyMod Activado",
-    "pt-br": "VolumeHotkeyMod Ativado",
-    "zh-cn": "VolumeHotkeyMod 已启用",
-    "ja-jp": "VolumeHotkeyMod 有効",
-    "ko-kr": "VolumeHotkeyMod 활성화됨"
+    "en-us": "Enable volume hotkeys",
+    "pl-pl": "Włącz skróty zmiany głośności",
+    "de-de": "Lautstärke-Hotkeys aktivieren",
+    "ru-ru": "Включить горячие клавиши громкости",
+    "fr-fr": "Activer les raccourcis de volume",
+    "it-it": "Abilita tasti rapidi del volume",
+    "es-es": "Activar atajos de volumen",
+    "es-mx": "Activar atajos de volumen",
+    "pt-br": "Ativar atalhos de volume",
+    "zh-cn": "启用音量快捷键",
+    "ja-jp": "音量ホットキーを有効化",
+    "ko-kr": "볼륨 단축키 활성화"
   },
-  "ENABLED": {
+  "True": {
     "en-us": "ENABLED",
     "pl-pl": "WŁĄCZONE",
     "de-de": "AKTIVIERT",
@@ -27,7 +27,7 @@
     "ja-jp": "有効",
     "ko-kr": "활성화됨"
   },
-  "DISABLED": {
+  "False": {
     "en-us": "DISABLED",
     "pl-pl": "WYŁĄCZONE",
     "de-de": "DEAKTIVIERT",
@@ -154,18 +154,18 @@
     "ko-kr": "음악 + 효과음 + 음성"
   },
   "KeySource_Translation": {
-    "en-us": "Key Source",
-    "pl-pl": "Źródło Klawiszy",
-    "de-de": "Tastenquelle",
-    "ru-ru": "Источник Клавиш",
-    "fr-fr": "Source des Touches",
-    "it-it": "Sorgente Tasti",
-    "es-es": "Fuente de Teclas",
-    "es-mx": "Fuente de Teclas",
-    "pt-br": "Fonte das Teclas",
-    "zh-cn": "按键来源",
-    "ja-jp": "キーソース",
-    "ko-kr": "키 소스"
+    "en-us": "Keys used to change volume",
+    "pl-pl": "Klawisze zmiany głośności",
+    "de-de": "Tasten zur Lautstärkeänderung",
+    "ru-ru": "Клавиши изменения громкости",
+    "fr-fr": "Touches de changement du volume",
+    "it-it": "Tasti per cambiare il volume",
+    "es-es": "Teclas para cambiar el volumen",
+    "es-mx": "Teclas para cambiar el volumen",
+    "pt-br": "Teclas para alterar o volume",
+    "zh-cn": "用于调节音量的按键",
+    "ja-jp": "音量変更に使用するキー",
+    "ko-kr": "볼륨 변경 키"
   },
   "Numbers": {
     "en-us": "Numbers",
