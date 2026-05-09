@@ -99,32 +99,7 @@ public class VolumeHotkeyMod : MelonMod
         if (modEnabledPreference.Value != true.ToString())
             return;
 
-        string keySource = keySourcePreference.Value;
-
-        if (keySource == "Numbers" || keySource == "Both")
-        {
-            for (int i = 0; i < NumberKeys.Length; i++)
-            {
-                if (Input.GetKeyDown(NumberKeys[i]))
-                {
-                    SetVolume(i * 0.1f);
-                    return;
-                }
-            }
-        }
-
-        if (keySource == "Keypad" || keySource == "Both")
-        {
-            for (int i = 0; i < KeypadKeys.Length; i++)
-            {
-                if (Input.GetKeyDown(KeypadKeys[i]))
-                {
-                    SetVolume(i * 0.1f);
-                    return;
-                }
-            }
-        }
-
+        HandleChangeVolume();
         HandleMuting();
     }
 
@@ -148,6 +123,34 @@ public class VolumeHotkeyMod : MelonMod
         }
     }
 
+    #region Change volume
+    private static void HandleChangeVolume()
+    {
+        string keySource = keySourcePreference.Value;
+
+        if (keySource == "Numbers" || keySource == "Both")
+        {
+            for (int i = 0; i < NumberKeys.Length; i++)
+            {
+                if (Input.GetKeyDown(NumberKeys[i]))
+                {
+                    SetVolume(i * 0.1f);
+                    return;
+                }
+            }
+        }
+        if (keySource == "Keypad" || keySource == "Both")
+        {
+            for (int i = 0; i < KeypadKeys.Length; i++)
+            {
+                if (Input.GetKeyDown(KeypadKeys[i]))
+                {
+                    SetVolume(i * 0.1f);
+                    return;
+                }
+            }
+        }
+    }
     private static void SetVolume(float volume)
     {
         var manager = SoundManager.Instance;
@@ -195,4 +198,5 @@ public class VolumeHotkeyMod : MelonMod
             KeyCode.Keypad8,
             KeyCode.Keypad9,
     };
+    #endregion
 }
