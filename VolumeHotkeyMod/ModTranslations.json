@@ -152,5 +152,61 @@
     "zh-cn": "音乐 + 音效 + 语音",
     "ja-jp": "音楽 + 効果音 + ボイス",
     "ko-kr": "음악 + 효과음 + 음성"
+  },
+  "KeySource_Translation": {
+    "en-us": "Key Source",
+    "pl-pl": "Źródło Klawiszy",
+    "de-de": "Tastenquelle",
+    "ru-ru": "Источник Клавиш",
+    "fr-fr": "Source des Touches",
+    "it-it": "Sorgente Tasti",
+    "es-es": "Fuente de Teclas",
+    "es-mx": "Fuente de Teclas",
+    "pt-br": "Fonte das Teclas",
+    "zh-cn": "按键来源",
+    "ja-jp": "キーソース",
+    "ko-kr": "키 소스"
+  },
+  "Numbers": {
+    "en-us": "Numbers",
+    "pl-pl": "Cyfry",
+    "de-de": "Zahlen",
+    "ru-ru": "Цифры",
+    "fr-fr": "Chiffres",
+    "it-it": "Numeri",
+    "es-es": "Números",
+    "es-mx": "Números",
+    "pt-br": "Números",
+    "zh-cn": "数字键",
+    "ja-jp": "数字キー",
+    "ko-kr": "숫자"
+  },
+  "Keypad": {
+    "en-us": "Keypad",
+    "pl-pl": "Klawiatura Numeryczna",
+    "de-de": "Nummernblock",
+    "ru-ru": "Цифровой Блок",
+    "fr-fr": "Pavé Numérique",
+    "it-it": "Tastierino Numerico",
+    "es-es": "Teclado Numérico",
+    "es-mx": "Teclado Numérico",
+    "pt-br": "Teclado Numérico",
+    "zh-cn": "小键盘",
+    "ja-jp": "テンキー",
+    "ko-kr": "숫자 패드"
+  },
+  "Both": {
+    "en-us": "Both",
+    "pl-pl": "Oba",
+    "de-de": "Beide",
+    "ru-ru": "Оба",
+    "fr-fr": "Les Deux",
+    "it-it": "Entrambi",
+    "es-es": "Ambos",
+    "es-mx": "Ambos",
+    "pt-br": "Ambos",
+    "zh-cn": "两者",
+    "ja-jp": "両方",
+    "ko-kr": "둘 다"
   }
 }

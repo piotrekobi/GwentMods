@@ -17,11 +17,13 @@ public class VolumeHotkeyMod : MelonMod
     private const string ModId = "VolumeHotkeyMod";
     internal static MelonPreferences_Entry<string> modEnabledPreference = null!;
     internal static MelonPreferences_Entry<string> affectedVolumesPreference = null!;
+    internal static MelonPreferences_Entry<string> keySourcePreference = null!;
 
     public override void OnInitializeMelon()
     {
         modEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_Enabled", true.ToString());
         affectedVolumesPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_AffectedVolumes", "Music");
+        keySourcePreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_KeySource", "Both");
         RegisterModOptions();
     }
 
@@ -31,6 +33,7 @@ public class VolumeHotkeyMod : MelonMod
         var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "VolumeHotkeyMod.ModTranslations.json");
         RegisterEnableSwitch(translationProvider);
         RegisterAffectedVolumesSwitch(translationProvider);
+        RegisterKeySourceSwitch(translationProvider);
     }
 
     private static void RegisterEnableSwitch(TranslationProvider translationProvider)
@@ -71,6 +74,24 @@ public class VolumeHotkeyMod : MelonMod
             applyPendingChangesCallback: () => { if (pendingMode != null) { affectedVolumesPreference.Value = pendingMode; pendingMode = null; } },
             revertPendingChangesCallback: () => pendingMode = null);
     }
+
+    private static void RegisterKeySourceSwitch(TranslationProvider translationProvider)
+    {
+        string? pendingMode = null;
+        ModSettingsMod.RegisterSwitcherSetting(
+            modId: ModId,
+            settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "KeySource_Translation", translationProvider.GetTranslationsFor("KeySource_Translation")),
+            switcherOptions: new List<string> {
+            ModSettingsMod.RegisterTranslationKey(ModId, "Numbers", translationProvider.GetTranslationsFor("Numbers")),
+            ModSettingsMod.RegisterTranslationKey(ModId, "Keypad",  translationProvider.GetTranslationsFor("Keypad")),
+            ModSettingsMod.RegisterTranslationKey(ModId, "Both",    translationProvider.GetTranslationsFor("Both")),
+            },
+            getCurrentValue: () => keySourcePreference.Value,
+            onValueChangedCallback: val => pendingMode = val as string != keySourcePreference.Value ? val as string : null,
+            hasPendingChangesCallback: () => pendingMode != null,
+            applyPendingChangesCallback: () => { if (pendingMode != null) { keySourcePreference.Value = pendingMode; pendingMode = null; } },
+            revertPendingChangesCallback: () => pendingMode = null);
+    }
     #endregion
 
     public override void OnUpdate()
@@ -78,12 +99,29 @@ public class VolumeHotkeyMod : MelonMod
         if (modEnabledPreference.Value != true.ToString())
             return;
 
-        for (int i = 0; i < NumberKeys.Length; i++)
+        string keySource = keySourcePreference.Value;
+
+        if (keySource == "Numbers" || keySource == "Both")
         {
-            if (Input.GetKeyDown(NumberKeys[i]))
+            for (int i = 0; i < NumberKeys.Length; i++)
             {
-                SetVolume(i * 0.1f);
-                return;
+                if (Input.GetKeyDown(NumberKeys[i]))
+                {
+                    SetVolume(i * 0.1f);
+                    return;
+                }
+            }
+        }
+
+        if (keySource == "Keypad" || keySource == "Both")
+        {
+            for (int i = 0; i < KeypadKeys.Length; i++)
+            {
+                if (Input.GetKeyDown(KeypadKeys[i]))
+                {
+                    SetVolume(i * 0.1f);
+                    return;
+                }
             }
         }
 
@@ -143,5 +181,18 @@ public class VolumeHotkeyMod : MelonMod
             KeyCode.Alpha7,
             KeyCode.Alpha8,
             KeyCode.Alpha9,
+    };
+    private static readonly KeyCode[] KeypadKeys = new KeyCode[]
+    {
+            KeyCode.Keypad0,
+            KeyCode.Keypad1,
+            KeyCode.Keypad2,
+            KeyCode.Keypad3,
+            KeyCode.Keypad4,
+            KeyCode.Keypad5,
+            KeyCode.Keypad6,
+            KeyCode.Keypad7,
+            KeyCode.Keypad8,
+            KeyCode.Keypad9,
     };
 }
