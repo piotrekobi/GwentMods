@@ -18,12 +18,17 @@ public class VolumeHotkeyMod : MelonMod
     internal static MelonPreferences_Entry<string> modEnabledPreference = null!;
     internal static MelonPreferences_Entry<string> affectedVolumesPreference = null!;
     internal static MelonPreferences_Entry<string> keySourcePreference = null!;
+    internal static MelonPreferences_Entry<string> muteKeyPreference = null!;
+    internal static MelonPreferences_Entry<string> unmuteKeyPreference = null!;
 
     public override void OnInitializeMelon()
     {
         modEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_Enabled", true.ToString());
         affectedVolumesPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_AffectedVolumes", "Music");
         keySourcePreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_KeySource", "Both");
+        muteKeyPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_MuteKey", KeyCode.Minus.ToString() + ";" + KeyCode.KeypadMinus.ToString());
+        unmuteKeyPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_UnmuteKey", KeyCode.Equals.ToString() + ";" + KeyCode.KeypadPlus.ToString());
+
         RegisterModOptions();
     }
 
@@ -103,6 +108,7 @@ public class VolumeHotkeyMod : MelonMod
         HandleMuting();
     }
 
+    #region Handle Muting
     private static void HandleMuting()
     {
         var broadcaster = EventBroadcaster.Instance;
@@ -111,17 +117,45 @@ public class VolumeHotkeyMod : MelonMod
             MelonLogger.Warning("[VolumeHotkeyMod] EventBroadcaster instance not available.");
             return;
         }
-        if (Input.GetKeyDown(KeyCode.KeypadPlus) || Input.GetKeyDown(KeyCode.Plus))
+
+        if (IsAnyConfiguredKeyPressed(unmuteKeyPreference.Value))
         {
             broadcaster.SettingsChanged.Invoke(SettingsKey.MUTE, false.ToString());
             MelonLogger.Msg("[VolumeHotkeyMod] Unmuted");
         }
-        else if (Input.GetKeyDown(KeyCode.KeypadMinus) || Input.GetKeyDown(KeyCode.Minus))
+        else if (IsAnyConfiguredKeyPressed(muteKeyPreference.Value))
         {
             broadcaster.SettingsChanged.Invoke(SettingsKey.MUTE, true.ToString());
             MelonLogger.Msg("[VolumeHotkeyMod] Muted");
         }
     }
+    private static bool IsAnyConfiguredKeyPressed(string configValue)
+    {
+        if (string.IsNullOrWhiteSpace(configValue))
+            return false;
+
+        string[] split = configValue.Split(';');
+
+        foreach (string raw in split)
+        {
+            string trimmed = raw.Trim();
+
+            if (string.IsNullOrEmpty(trimmed))
+                continue;
+
+            if (!Enum.TryParse(trimmed, true, out KeyCode keyCode))
+            {
+                MelonLogger.Warning($"[VolumeHotkeyMod] Invalid key code in config: {trimmed}");
+                continue;
+            }
+
+            if (Input.GetKeyDown(keyCode))
+                return true;
+        }
+
+        return false;
+    }
+    #endregion
 
     #region Change volume
     private static void HandleChangeVolume()
