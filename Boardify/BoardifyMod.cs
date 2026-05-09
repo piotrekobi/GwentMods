@@ -66,6 +66,11 @@ public class BoardifyMod : MelonMod
 [HarmonyPatch(typeof(BoardLoader), "LoadBoard")]
 public static class Patch_LoadBoard
 {
+    private static int _lastRandomBoard = -1;
+    private static DateTime _lastRandomTime = DateTime.MinValue;
+    private static readonly TimeSpan RandomCooldown = TimeSpan.FromSeconds(1);
+    private static readonly Array boardIds = Enum.GetValues(typeof(BoardId));
+
     static void Prefix(BoardLoader __instance)
     {
         try
@@ -75,18 +80,24 @@ public static class Patch_LoadBoard
                 return;
 
             string mode = BoardifyMod.boardifyModePreference.Value;
-            
+
             if (mode == "DISABLED")
-            {
                 return;
-            }
 
             int desiredBoard;
             if (mode == "RANDOM")
             {
-                var boardIds = Enum.GetValues(typeof(BoardId));
-                desiredBoard = (int)boardIds.GetValue(new Random().Next(boardIds.Length));
-                MelonLogger.Msg($"Random mode - selected board ArtId: {desiredBoard}");
+                if (_lastRandomBoard == -1 || DateTime.UtcNow - _lastRandomTime > RandomCooldown)
+                {
+                    _lastRandomBoard = (int)boardIds.GetValue(new Random().Next(boardIds.Length));
+                    _lastRandomTime = DateTime.UtcNow;
+                    MelonLogger.Msg($"Random mode - selected new board ArtId: {_lastRandomBoard}");
+                }
+                else
+                {
+                    MelonLogger.Msg($"Random mode - reusing board ArtId: {_lastRandomBoard}");
+                }
+                desiredBoard = _lastRandomBoard;
             }
             else
             {
