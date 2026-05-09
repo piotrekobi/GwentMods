@@ -27,7 +27,7 @@
     "ja-jp": "Boardify 有効",
     "ko-kr": "Boardify 활성화됨"
   },
-  "True": {
+  "ENABLED": {
     "en-us": "ENABLED",
     "pl-pl": "WŁĄCZONE",
     "de-de": "AKTIVIERT",
@@ -41,7 +41,7 @@
     "ja-jp": "有効",
     "ko-kr": "활성화됨"
   },
-  "False": {
+  "DISABLED": {
     "en-us": "DISABLED",
     "pl-pl": "WYŁĄCZONE",
     "de-de": "DEAKTIVIERT",
@@ -54,6 +54,20 @@
     "zh-cn": "已禁用",
     "ja-jp": "無効",
     "ko-kr": "비활성화됨"
+  },
+  "RANDOM": {
+    "en-us": "RANDOM",
+    "pl-pl": "LOSOWY",
+    "de-de": "ZUFÄLLIG",
+    "ru-ru": "СЛУЧАЙНЫЙ",
+    "fr-fr": "ALÉATOIRE",
+    "it-it": "CASUALE",
+    "es-es": "ALEATORIO",
+    "es-mx": "ALEATORIO",
+    "pt-br": "ALEATÓRIO",
+    "zh-cn": "随机",
+    "ja-jp": "ランダム",
+    "ko-kr": "무작위"
   },
   "AbandonedLaboratory": {
     "en-us": "Abandoned Laboratory",
