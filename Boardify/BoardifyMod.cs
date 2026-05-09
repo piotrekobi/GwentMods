@@ -13,11 +13,11 @@ public class BoardifyMod : MelonMod
 {
     private const string ModId = "Boardify";
     internal static MelonPreferences_Entry<string> boardPreference = null!;
-    internal static MelonPreferences_Entry<bool> isModEnabledPreference = null!;
+    internal static MelonPreferences_Entry<string> boardifyModePreference = null!;
 
     public override void OnInitializeMelon()
     {
-        isModEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("BoardifyEnabled", true);
+        boardifyModePreference = MelonPreferences.CreateCategory(ModId).CreateEntry("BoardifyMode", "ENABLED");
         boardPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("CurrentBoard", BoardId.DandelionMeadow.ToString());
         var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "Boardify.BoardTranslations.json");
         RegisterEnableSwitch(translationProvider);
@@ -27,19 +27,20 @@ public class BoardifyMod : MelonMod
 
     private static void RegisterEnableSwitch(TranslationProvider translationProvider)
     {
-        string? pendingEnable = null;
+        string? pendingMode = null;
         ModSettingsMod.RegisterSwitcherSetting(
             modId: ModId,
             settingTranslationKey: ModSettingsMod.RegisterTranslationKey(ModId, "Boardify_Enabled_Translation", translationProvider.GetTranslationsFor("Boardify_Enabled_Translation")),
             switcherOptions: new List<string> { 
-                ModSettingsMod.RegisterTranslationKey(ModId, true.ToString(), translationProvider.GetTranslationsFor(true.ToString())),
-                ModSettingsMod.RegisterTranslationKey(ModId, false.ToString(), translationProvider.GetTranslationsFor(false.ToString())) 
+                ModSettingsMod.RegisterTranslationKey(ModId, "ENABLED", translationProvider.GetTranslationsFor("ENABLED")),
+                ModSettingsMod.RegisterTranslationKey(ModId, "DISABLED", translationProvider.GetTranslationsFor("DISABLED")),
+                ModSettingsMod.RegisterTranslationKey(ModId, "RANDOM", translationProvider.GetTranslationsFor("RANDOM"))
             },
-            getCurrentValue: () => isModEnabledPreference.Value.ToString(), // currently saved value
-            onValueChangedCallback: val => pendingEnable = val as string != isModEnabledPreference.Value.ToString() ? val as string : null, // user changed the switcher in UI
-            hasPendingChangesCallback: () => pendingEnable != null, // are there unsaved changes?
-            applyPendingChangesCallback: () => { if (pendingEnable != null) { isModEnabledPreference.Value = bool.Parse(pendingEnable); pendingEnable = null; } }, // user clicked Save
-            revertPendingChangesCallback: () => pendingEnable = null); // user clicked Back/Cancel
+            getCurrentValue: () => boardifyModePreference.Value, // currently saved value
+            onValueChangedCallback: val => pendingMode = val as string != boardifyModePreference.Value ? val as string : null, // user changed the switcher in UI
+            hasPendingChangesCallback: () => pendingMode != null, // are there unsaved changes?
+            applyPendingChangesCallback: () => { if (pendingMode != null) { boardifyModePreference.Value = pendingMode; pendingMode = null; } }, // user clicked Save
+            revertPendingChangesCallback: () => pendingMode = null); // user clicked Back/Cancel
     }
 
     private static void RegisterAllBoards(TranslationProvider translationProvider)
@@ -73,19 +74,30 @@ public static class Patch_LoadBoard
             if (definition == null)
                 return;
 
-            MelonLogger.Msg("Current board preference: " + BoardifyMod.boardPreference.Value);
-            int desiredBoard = (int)Enum.Parse(typeof(BoardId), BoardifyMod.boardPreference.Value);
+            string mode = BoardifyMod.boardifyModePreference.Value;
+            
+            if (mode == "DISABLED")
+            {
+                return;
+            }
+
+            int desiredBoard;
+            if (mode == "RANDOM")
+            {
+                var boardIds = Enum.GetValues(typeof(BoardId));
+                desiredBoard = (int)boardIds.GetValue(new Random().Next(boardIds.Length));
+                MelonLogger.Msg($"Random mode - selected board ArtId: {desiredBoard}");
+            }
+            else
+            {
+                MelonLogger.Msg("Current board preference: " + BoardifyMod.boardPreference.Value);
+                desiredBoard = (int)Enum.Parse(typeof(BoardId), BoardifyMod.boardPreference.Value);
+            }
+
             if (definition.ArtId != desiredBoard)
             {
-                if (BoardifyMod.isModEnabledPreference.Value == true)
-                {
-                    definition.ArtId = desiredBoard;
-                    MelonLogger.Msg($"Forced Board ArtId to {desiredBoard}");
-                }
-                else
-                {
-                    MelonLogger.Msg($"But mod is disabled");
-                }
+                definition.ArtId = desiredBoard;
+                MelonLogger.Msg($"Forced Board ArtId to {desiredBoard}");
             }
             else
             {
