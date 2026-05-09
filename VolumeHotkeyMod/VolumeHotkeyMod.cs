@@ -22,10 +22,15 @@ public class VolumeHotkeyMod : MelonMod
     {
         modEnabledPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_Enabled", true.ToString());
         affectedVolumesPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_AffectedVolumes", "Music");
+        RegisterModOptions();
+    }
+
+    #region Register mod options
+    private void RegisterModOptions()
+    {
         var translationProvider = new EmbeddedFileTranslationProvider(MelonAssembly.Assembly, "VolumeHotkeyMod.ModTranslations.json");
         RegisterEnableSwitch(translationProvider);
         RegisterAffectedVolumesSwitch(translationProvider);
-        HarmonyInstance.PatchAll();
     }
 
     private static void RegisterEnableSwitch(TranslationProvider translationProvider)
@@ -66,6 +71,7 @@ public class VolumeHotkeyMod : MelonMod
             applyPendingChangesCallback: () => { if (pendingMode != null) { affectedVolumesPreference.Value = pendingMode; pendingMode = null; } },
             revertPendingChangesCallback: () => pendingMode = null);
     }
+    #endregion
 
     public override void OnUpdate()
     {
@@ -81,6 +87,11 @@ public class VolumeHotkeyMod : MelonMod
             }
         }
 
+        HandleMuting();
+    }
+
+    private static void HandleMuting()
+    {
         var broadcaster = EventBroadcaster.Instance;
         if (broadcaster == null)
         {
