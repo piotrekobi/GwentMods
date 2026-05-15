@@ -1,14 +1,14 @@
 {
   "Boardify_Enabled_Translation": {
     "en-us": "Select Any Board",
-    "pl-pl": "Wybierz Dowolną Planszę",
-    "de-de": "Beliebiges Spielfeld Wählen",
-    "ru-ru": "Выбор Любого Поля",
-    "fr-fr": "Choisir N'importe Quel Plateau",
-    "it-it": "Seleziona Qualsiasi Tabellone",
-    "es-es": "Seleccionar Cualquier Tablero",
-    "es-mx": "Seleccionar Cualquier Tablero",
-    "pt-br": "Selecionar Qualquer Tabuleiro",
+    "pl-pl": "Wybierz dowolną planszę",
+    "de-de": "Beliebiges Spielfeld wählen",
+    "ru-ru": "Выбор любого поля",
+    "fr-fr": "Choisir n'importe quel plateau",
+    "it-it": "Seleziona qualsiasi tabellone",
+    "es-es": "Seleccionar cualquier tablero",
+    "es-mx": "Seleccionar cualquier tablero",
+    "pt-br": "Selecionar qualquer tabuleiro",
     "zh-cn": "选择任意棋盘",
     "ja-jp": "任意のボードを選択",
     "ko-kr": "아무 보드나 선택"
