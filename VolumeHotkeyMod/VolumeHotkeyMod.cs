@@ -206,7 +206,7 @@ public class VolumeHotkeyMod : MelonMod
     }
     #endregion
 
-    #region Restore values on alt+tab or game focus
+    #region Restore mod values when game tries to reset them
     [HarmonyPatch(typeof(ApplicationSoundFocusController), "OnAudioFocusChanged")]
     internal static class Patch_ApplicationSoundFocusController_OnAudioFocusChanged
     {
@@ -216,23 +216,40 @@ public class VolumeHotkeyMod : MelonMod
             if (!focusValue) return; // skip execution when losing focus, only run when regaining it
             if (VolumeHotkeyMod.modEnabledPreference.Value != true.ToString()) return;
 
-            var manager = SoundManager.Instance;
-            if (manager?.SettingsHandler == null) 
-                return;
-
-            var handler = manager.SettingsHandler;
-
-            if (VolumeHotkeyMod.LastMusicVolume.HasValue)
-                handler.UpdateFloatSettingValue(SoundSettingType.MusicVolume, VolumeHotkeyMod.LastMusicVolume.Value);
-            if (VolumeHotkeyMod.LastSfxVolume.HasValue)
-                handler.UpdateFloatSettingValue(SoundSettingType.SfxVolume, VolumeHotkeyMod.LastSfxVolume.Value);
-            if (VolumeHotkeyMod.LastSpeechVolume.HasValue)
-                handler.UpdateFloatSettingValue(SoundSettingType.VoicesVolume, VolumeHotkeyMod.LastSpeechVolume.Value);
-            if (VolumeHotkeyMod.LastMuteState.HasValue)
-                handler.UpdateBoolSettingsValue(SoundSettingType.MuteToggle, VolumeHotkeyMod.LastMuteState.Value);
+            RestoreVolumeValues();
 
             MelonLogger.Msg("[VolumeHotkeyMod] Re-applied mod volumes after focus restore.");
         }
+    }
+    [HarmonyPatch(typeof(UISettingsPanel), "HandleHiding")]
+    public static class UISettingsPanel_HandleHiding_Patch
+    {
+        // Runs after game tries to restore volumes when closing the settings menu
+        static void Postfix()
+        {
+            if (VolumeHotkeyMod.modEnabledPreference.Value != true.ToString()) return;
+
+            RestoreVolumeValues();
+
+            MelonLogger.Msg("[VolumeHotkeyMod] Re-applied mod volumes after closing settings menu.");
+        }
+    }
+    private static void RestoreVolumeValues()
+    {
+        var manager = SoundManager.Instance;
+        if (manager?.SettingsHandler == null)
+            return;
+
+        var handler = manager.SettingsHandler;
+
+        if (VolumeHotkeyMod.LastMusicVolume.HasValue)
+            handler.UpdateFloatSettingValue(SoundSettingType.MusicVolume, VolumeHotkeyMod.LastMusicVolume.Value);
+        if (VolumeHotkeyMod.LastSfxVolume.HasValue)
+            handler.UpdateFloatSettingValue(SoundSettingType.SfxVolume, VolumeHotkeyMod.LastSfxVolume.Value);
+        if (VolumeHotkeyMod.LastSpeechVolume.HasValue)
+            handler.UpdateFloatSettingValue(SoundSettingType.VoicesVolume, VolumeHotkeyMod.LastSpeechVolume.Value);
+        if (VolumeHotkeyMod.LastMuteState.HasValue)
+            handler.UpdateBoolSettingsValue(SoundSettingType.MuteToggle, VolumeHotkeyMod.LastMuteState.Value);
     }
     #endregion
 
