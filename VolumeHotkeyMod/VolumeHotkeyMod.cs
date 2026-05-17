@@ -1,8 +1,6 @@
 ﻿using HarmonyLib;
-using Il2CppGwentGameplay;
 using Il2CppGwentUnity;
 using Il2CppGwentUnity.Audio;
-using Il2CppGwentVisuals.UX;
 using MelonLoader;
 using ModSettings;
 using ModSettings.TranslationProviders;
@@ -20,6 +18,10 @@ public class VolumeHotkeyMod : MelonMod
     internal static MelonPreferences_Entry<string> keySourcePreference = null!;
     internal static MelonPreferences_Entry<string> muteKeyPreference = null!;
     internal static MelonPreferences_Entry<string> unmuteKeyPreference = null!;
+    internal static float? LastMusicVolume = null;
+    internal static float? LastSfxVolume = null;
+    internal static float? LastSpeechVolume = null;
+    internal static bool? LastMuteState = null;
 
     public override void OnInitializeMelon()
     {
@@ -30,6 +32,7 @@ public class VolumeHotkeyMod : MelonMod
         unmuteKeyPreference = MelonPreferences.CreateCategory(ModId).CreateEntry("VolumeHotkeyMod_UnmuteKey", KeyCode.Equals.ToString() + ";" + KeyCode.KeypadPlus.ToString());
 
         RegisterModOptions();
+        HarmonyInstance.PatchAll();
     }
 
     #region Register mod options
@@ -113,19 +116,18 @@ public class VolumeHotkeyMod : MelonMod
     {
         var broadcaster = EventBroadcaster.Instance;
         if (broadcaster == null)
-        {
-            MelonLogger.Warning("[VolumeHotkeyMod] EventBroadcaster instance not available.");
             return;
-        }
 
         if (IsAnyConfiguredKeyPressed(unmuteKeyPreference.Value))
         {
             broadcaster.SettingsChanged.Invoke(SettingsKey.MUTE, false.ToString());
+            LastMuteState = false;
             MelonLogger.Msg("[VolumeHotkeyMod] Unmuted");
         }
         else if (IsAnyConfiguredKeyPressed(muteKeyPreference.Value))
         {
             broadcaster.SettingsChanged.Invoke(SettingsKey.MUTE, true.ToString());
+            LastMuteState = true;
             MelonLogger.Msg("[VolumeHotkeyMod] Muted");
         }
     }
@@ -189,22 +191,51 @@ public class VolumeHotkeyMod : MelonMod
     {
         var manager = SoundManager.Instance;
         if (manager?.SettingsHandler == null)
-        {
-            MelonLogger.Warning("[VolumeHotkeyMod] SoundManager not available.");
             return;
-        }
 
         string mode = affectedVolumesPreference.Value;
 
         if (mode == "Music" || mode == "Music+SFX" || mode == "Music+Speech" || mode == "Music+SFX+Speech")
-            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.MusicVolume, volume);
+            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.MusicVolume, volume); LastMusicVolume = volume;
         if (mode == "SFX" || mode == "Music+SFX" || mode == "SFX+Speech" || mode == "Music+SFX+Speech")
-            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.SfxVolume, volume);
+            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.SfxVolume, volume); LastSfxVolume = volume;
         if (mode == "Speech" || mode == "Music+Speech" || mode == "SFX+Speech" || mode == "Music+SFX+Speech")
-            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.VoicesVolume, volume);
+            manager.SettingsHandler.UpdateFloatSettingValue(SoundSettingType.VoicesVolume, volume); LastSpeechVolume = volume;
 
         MelonLogger.Msg($"[VolumeHotkeyMod] Volume set to {volume * 100:0}% (mode: {mode})");
     }
+    #endregion
+
+    #region Restore values on alt+tab or game focus
+    [HarmonyPatch(typeof(ApplicationSoundFocusController), "OnAudioFocusChanged")]
+    internal static class Patch_ApplicationSoundFocusController_OnAudioFocusChanged
+    {
+        // Runs after the game's restore logic, overwriting it with mod values
+        static void Postfix(bool focusValue)
+        {
+            if (!focusValue) return; // skip execution when losing focus, only run when regaining it
+            if (VolumeHotkeyMod.modEnabledPreference.Value != true.ToString()) return;
+
+            var manager = SoundManager.Instance;
+            if (manager?.SettingsHandler == null) 
+                return;
+
+            var handler = manager.SettingsHandler;
+
+            if (VolumeHotkeyMod.LastMusicVolume.HasValue)
+                handler.UpdateFloatSettingValue(SoundSettingType.MusicVolume, VolumeHotkeyMod.LastMusicVolume.Value);
+            if (VolumeHotkeyMod.LastSfxVolume.HasValue)
+                handler.UpdateFloatSettingValue(SoundSettingType.SfxVolume, VolumeHotkeyMod.LastSfxVolume.Value);
+            if (VolumeHotkeyMod.LastSpeechVolume.HasValue)
+                handler.UpdateFloatSettingValue(SoundSettingType.VoicesVolume, VolumeHotkeyMod.LastSpeechVolume.Value);
+            if (VolumeHotkeyMod.LastMuteState.HasValue)
+                handler.UpdateBoolSettingsValue(SoundSettingType.MuteToggle, VolumeHotkeyMod.LastMuteState.Value);
+
+            MelonLogger.Msg("[VolumeHotkeyMod] Re-applied mod volumes after focus restore.");
+        }
+    }
+    #endregion
+
 
     private static readonly KeyCode[] NumberKeys = new KeyCode[]
     {
@@ -232,5 +263,4 @@ public class VolumeHotkeyMod : MelonMod
             KeyCode.Keypad8,
             KeyCode.Keypad9,
     };
-    #endregion
 }
