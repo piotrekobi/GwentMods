@@ -196,17 +196,17 @@
     "ko-kr": "숫자 패드"
   },
   "Both": {
-    "en-us": "Both",
-    "pl-pl": "Oba",
-    "de-de": "Beide",
-    "ru-ru": "Оба",
-    "fr-fr": "Les Deux",
-    "it-it": "Entrambi",
-    "es-es": "Ambos",
-    "es-mx": "Ambos",
-    "pt-br": "Ambos",
-    "zh-cn": "两者",
-    "ja-jp": "両方",
-    "ko-kr": "둘 다"
+    "en-us": "Numbers + Keypad",
+    "pl-pl": "Cyfry + Klawiatura Numeryczna",
+    "de-de": "Zahlen + Nummernblock",
+    "ru-ru": "Цифры + Цифровой Блок",
+    "fr-fr": "Chiffres + Pavé Numérique",
+    "it-it": "Numeri + Tastierino Numerico",
+    "es-es": "Números + Teclado Numérico",
+    "es-mx": "Números + Teclado Numérico",
+    "pt-br": "Números + Teclado Numérico",
+    "zh-cn": "数字键 + 小键盘",
+    "ja-jp": "数字キー + テンキー",
+    "ko-kr": "숫자 + 숫자 패드"
   }
 }

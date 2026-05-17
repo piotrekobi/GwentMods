@@ -6,7 +6,7 @@ using ModSettings;
 using ModSettings.TranslationProviders;
 using System.Diagnostics;
 
-[assembly: MelonInfo(typeof(HideStarterDecks.HideStarterDecksMod), "HideStarterDecks", "1.0.0", "Author")]
+[assembly: MelonInfo(typeof(HideStarterDecks.HideStarterDecksMod), "HideStarterDecks", "1.0.0", "Jester")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 namespace HideStarterDecks;
 
