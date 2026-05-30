@@ -5,7 +5,7 @@ using MelonLoader;
 using ModSettings;
 using System.Diagnostics;
 
-[assembly: MelonInfo(typeof(Premiumify.PremiumifyMod), "Premiumify", "1.0.0", "piotrekobi")]
+[assembly: MelonInfo(typeof(Premiumify.PremiumifyMod), "Premiumify", "1.0.1", "piotrekobi")]
 [assembly: MelonGame("CDProjektRED", "Gwent")]
 
 namespace Premiumify;
